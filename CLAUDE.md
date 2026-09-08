@@ -240,6 +240,36 @@ bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
   sonde dans `src/mocks/fixtures/`.
 - **80 tests**, couverture `src/shared/lib` + `api/_lib` ≈ 98 % / 93 % branches.
 
-**Reste (Phase 2, c'est de l'UI) :** `src/shared/lib/symbols.ts` (mapping
-symbole Foreca → icône filaire + test exhaustif — §4.4). Le code `symbol` passe
-déjà tel quel dans `TimeStep.symbol`.
+### Phase 2 — Squelette UI _(en cours — branche `feat/phase-2-ui-skeleton`, PR #3)_
+
+**Fait :**
+
+- **Lib pure + tests :** `units.ts` (conversions + formatage, `null` → « — »),
+  `time.ts` (luxon, fuseau de la ville), `color.ts` (WCAG), `theme.ts`
+  (`resolveTheme` day/night/dawn/dusk + contraste garanti — test 20 points
+  aube/crépuscule, brief §11), `symbols.ts` (décodeur Foreca `dNNN`/`nNNN`
+  **total**, test exhaustif §4.4), `interpolate.ts` (linéaire vs plus proche
+  voisin, brief §8.3).
+- **Données :** React Query + `fetchWeather`/`fetchSearch` (front n'appelle que
+  `/api/*`). `useWeatherSnapshot` + `selectConditions` (interpole les nombres,
+  symbole/phrase au plus proche, dérive le thème).
+- **Thème :** `useApplyTheme` pilote les variables CSS + `<meta theme-color>` ;
+  override manuel Auto/Clair/Sombre (`useSettings`, persisté localStorage).
+  Encres secondaires `--app-ink-muted` (≥ 4.5:1) / `--app-ink-faint` (≥ 3:1)
+  par schéma. **Le fond ambiant peut être un dégradé ; le texte repose sur une
+  surface unie qui bascule franchement au milieu de transition** (interprétation
+  de l'exigence §11, à valider sur iPhone).
+- **UI :** layout 15/60/25 (`HomeScreen`), `WeatherIcon` (13 icônes filaires
+  maison, stroke 1.5), `MetricGrid` (Vent/Humidité/UV/AQI), `HourStrip`
+  (sélecteur d'heure — sert aussi d'alternative non gestuelle §8.6),
+  `Attribution` Foreca, `Skeleton`.
+- **MSW navigateur** : `/api/weather` sert `weather-snapshot.json` recalé sur
+  « maintenant » (`rebaseSnapshot`). Chunk MSW absent du build de prod ;
+  `VITE_ENABLE_MOCKS=true` (`.env.mock`, `pnpm build:mock`) le réactive pour
+  e2e / Lighthouse.
+- **Tests :** 141 unitaires + 5 e2e (écran, sélection d'heure, axe, captures
+  clair/sombre). Bundle JS 100 kB gzip (budget §12 : < 180).
+
+**Pas encore fait (phases suivantes) :** globe (Phase 3), bague gestuelle
+(Phase 4), géoloc/recherche/favoris (Phase 5), bottom sheets + prévisions 10 j +
+réglages complets (Phase 6). Le menu et la loupe sont des boutons inertes.
