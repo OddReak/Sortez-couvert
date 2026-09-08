@@ -135,6 +135,16 @@ export function TimeRing({
     const d = drag.current;
     let keepGoing = false;
 
+    // Un retour à « maintenant » (double-tap, touche Home, clic sur MAINTENANT)
+    // pendant l'inertie doit tout arrêter, pas se faire écraser.
+    if (!d.active && isFollowingNow()) {
+      d.velocity = 0;
+      setScrubbing(false);
+      syncRotor();
+      stopLoop();
+      return;
+    }
+
     if (!d.active) {
       if (d.velocity !== 0) {
         d.velocity = decayVelocity(d.velocity);

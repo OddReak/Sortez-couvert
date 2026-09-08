@@ -14,32 +14,22 @@ import { toForecaLocation } from '../../src/shared/lib/geo';
 import type { Place, WeatherSnapshot } from '../../src/shared/types/domain';
 import { withCache } from './cache';
 import { forecaGet } from './foreca';
-import { buildSnapshot, normalizePlace, type SnapshotParts } from './normalize';
+import { buildSnapshot, type SnapshotParts } from './normalize';
 import type { WeatherQuery } from './params';
+import { resolvePlace } from './place-service';
 import {
   forecaAirQualityResponseSchema,
   forecaCurrentResponseSchema,
   forecaDailyResponseSchema,
   forecaHourlyResponseSchema,
-  forecaLocationMetaSchema,
 } from './schemas';
 
 const HOURLY_PERIODS = 72;
 const DAILY_PERIODS = 10;
 const AIR_QUALITY_PERIODS = 24;
 
-async function fetchPlace(query: WeatherQuery): Promise<Place> {
-  const loc = toForecaLocation(query.lat, query.lon);
-  const { value } = await withCache(
-    'location-meta',
-    `${loc}:${query.lang}`,
-    () =>
-      forecaGet(`/api/v1/location/${loc}`, {
-        params: { lang: query.lang },
-      }).then((raw) => forecaLocationMetaSchema.parse(raw)),
-  );
-  return normalizePlace(value, value.timezone);
-}
+const fetchPlace = (query: WeatherQuery): Promise<Place> =>
+  resolvePlace(query.lat, query.lon, query.lang);
 
 export async function getWeatherSnapshot(
   query: WeatherQuery,

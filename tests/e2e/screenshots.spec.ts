@@ -53,3 +53,24 @@ test('capture — bague scrubée (Prévision)', async ({ page }) => {
   await page.waitForTimeout(1500);
   await page.screenshot({ path: test.info().outputPath('ring-scrubbed.png') });
 });
+
+test('capture — onboarding pré-permission', async ({ page }) => {
+  await page.goto('/?onboarding=1');
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('heading', { name: /Votre position/ }).waitFor();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('onboarding.png') });
+});
+
+test('capture — recherche de ville', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Rechercher une ville' }).click();
+  await page.getByLabel('Nom de ville').fill('Paris');
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /Paris/ })
+    .first()
+    .waitFor();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: test.info().outputPath('search.png') });
+});

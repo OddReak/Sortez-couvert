@@ -305,7 +305,7 @@ par anisotropy) ; le chunk three est lourd (drei tire beaucoup — envisager de
 le retirer) ; `@react-three/fiber` v9 exige `react <19.3` (notre `^19.2` le
 permet, à surveiller).
 
-### Phase 4 — Bague temporelle _(en cours — branche `feat/phase-4-time-ring`, PR #14)_
+### Phase 4 — Bague temporelle _(validée, PR #15)_
 
 Le composant le plus délicat du brief (§8). LE test au pouce sur iPhone.
 
@@ -340,5 +340,36 @@ motion` ou via les réglages (brief §8.6).
 - **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
   axe). Bundle initial **104 ko gzip**.
 
-**Pas encore fait :** géoloc/recherche/favoris (Phase 5), bottom sheets +
-prévisions 10 j + réglages complets (Phase 6). Le menu et la loupe sont inertes.
+### Phase 5 — Lieux _(en cours — branche `feat/phase-5-places`, PR #16)_
+
+- **`GET /api/place?lat&lon`** — coordonnées → `Place` (Foreca `location`, cache
+  30 j). `resolvePlace()` factorisé, réutilisé par l'agrégateur météo.
+- **`geolocation.ts`** — wrapper `navigator.geolocation` : les **3 états
+  explicites** (accordée / refusée / indisponible) + `queryGeoPermission()`
+  (état SANS déclencher la boîte de dialogue). Testé.
+- **Onboarding** — 2 écrans, le 2ᵉ est une **pré-permission** : explication
+  AVANT `getCurrentPosition()` (irréversible une fois refusée sur iOS, §9.1).
+  Refus → on reste sur l'écran, recherche manuelle proposée.
+- **`SearchSheet`** — champ debouncé 300 ms, résultats via `/api/search`,
+  **historique des 5 dernières** recherches, `inputMode="search"`.
+- **`placesStore`** (zustand + **IndexedDB** via `idb-keyval`, pas localStorage) :
+  lieu courant, favoris **≤ 8 réordonnables**, historique, `onboardingDone`,
+  `geoStatus`. `updateCurrentMeta` affine le nom/fuseau depuis la réponse météo.
+- **`PlacesMenu`** (drawer) : favoris (bascule, monter/descendre, retirer),
+  « ajouter aux favoris », lien Réglages. **`SettingsSheet`** : unités, thème,
+  langue, tick sonore, rangée d'heures, effacer les données.
+- **`useSwipePlaces`** — swipe horizontal entre favoris (§9.4).
+- **`LocationGate`** décide l'écran d'entrée selon `hydrated` / `current` /
+  `onboardingDone`.
+- **Mode mock** : `seedMockPlace()` saute l'onboarding (Paris) sauf
+  `?onboarding=1` (pour tester le parcours permission en e2e).
+- **`Sheet`** — primitive bottom sheet (`role="dialog"`, Échap, backdrop),
+  sans dépendance d'animation.
+- Correctif Phase 4 découvert au passage : l'inertie de la bague écrasait un
+  retour à « maintenant » (Home / double-tap) — le loop bail maintenant sur
+  `isFollowingNow()`.
+- **222 tests** unitaires + e2e (onboarding, **refus de permission → recherche
+  manuelle**, permission accordée, favoris). Bundle **110 ko gzip**.
+
+**Pas encore fait :** bottom sheets de détail + graphes + prévisions 10 j +
+alertes + réglages avancés (Phase 6).
