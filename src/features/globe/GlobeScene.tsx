@@ -7,13 +7,17 @@ import {
   Color,
   type Group,
   Matrix4,
+  type MeshBasicMaterial,
   Quaternion,
   SRGBColorSpace,
   ShaderMaterial,
   Vector3,
 } from 'three';
 
+import { getCursorEpoch, subscribeFast } from '@/features/time-ring/cursor';
+import { interpolateValue } from '@/shared/lib/interpolate';
 import { subsolarPoint } from '@/shared/lib/sun';
+import type { TimeStep } from '@/shared/types/domain';
 
 import {
   atmosphereFragmentShader,
@@ -59,8 +63,8 @@ function cityQuaternion(lat: number, lon: number): Quaternion {
 export type GlobeSceneProps = {
   lat: number;
   lon: number;
-  atEpoch: number;
-  cloudiness: number;
+  /** Pas horaires (−24 h → +72 h) pour interpoler la nébulosité au curseur. */
+  hourly: TimeStep[];
   highRes: boolean;
   reducedMotion: boolean;
 };
@@ -68,8 +72,7 @@ export type GlobeSceneProps = {
 export function GlobeScene({
   lat,
   lon,
-  atEpoch,
-  cloudiness,
+  hourly,
   highRes,
   reducedMotion,
 }: GlobeSceneProps) {
@@ -141,15 +144,16 @@ export function GlobeScene({
   );
 
   const snappedRef = useRef(false);
+  const cloudMatRef = useRef<MeshBasicMaterial>(null);
 
   useEffect(() => {
     snappedRef.current = false;
     invalidate();
   }, [targetQuat, invalidate]);
 
-  useEffect(() => {
-    invalidate();
-  }, [atEpoch, invalidate]);
+  // Le globe suit le curseur temporel (brief §8.4) : lecture directe dans
+  // useFrame + invalidate à chaque changement, jamais de state React.
+  useEffect(() => subscribeFast(invalidate), [invalidate]);
 
   useEffect(
     () => () => {
@@ -164,11 +168,7 @@ export function GlobeScene({
     if (!group) return;
 
     if (!snappedRef.current) {
-      // Première frame pour cette ville : on part d'un peu à côté et on
-      // laisse le slerp faire l'entrée (sauf reduced-motion → snap direct).
-      if (reducedMotion) {
-        group.quaternion.copy(targetQuat);
-      }
+      if (reducedMotion) group.quaternion.copy(targetQuat);
       snappedRef.current = true;
     }
 
@@ -181,7 +181,8 @@ export function GlobeScene({
       group.quaternion.copy(targetQuat);
     }
 
-    const sub = subsolarPoint(new Date(atEpoch * 1000));
+    const epoch = getCursorEpoch();
+    const sub = subsolarPoint(new Date(epoch * 1000));
     const worldSun = textureDirection(sub.lat, sub.lon).applyQuaternion(
       group.quaternion,
     );
@@ -190,13 +191,20 @@ export function GlobeScene({
     earthUniforms.cameraPositionW.value.copy(camera.position);
     atmosphereUniforms.cameraPositionW.value.copy(camera.position);
 
+    // Nébulosité interpolée au curseur (brief §7.1).
+    const cloud = interpolateValue(hourly, epoch, (s) => s.cloudiness) ?? 0;
+    const targetOpacity = cloud < 20 ? 0 : Math.min(0.55, (cloud / 100) * 0.7);
+    if (cloudMatRef.current) {
+      cloudMatRef.current.opacity +=
+        (targetOpacity - cloudMatRef.current.opacity) * 0.1;
+    }
+
     if (!reducedMotion && cloudsRef.current) {
       cloudsRef.current.rotation.y += delta * 0.006;
       invalidate();
     }
   });
 
-  const cloudOpacity = cloudiness < 0.2 ? 0 : Math.min(0.55, cloudiness * 0.7);
   const cityPos = useMemo(() => textureDirection(lat, lon), [lat, lon]);
 
   return (
@@ -215,17 +223,16 @@ export function GlobeScene({
         </mesh>
 
         <group ref={cloudsRef}>
-          {cloudOpacity > 0 ? (
-            <mesh>
-              <sphereGeometry args={[1.006, 64, 64]} />
-              <meshBasicMaterial
-                map={cloudsMap}
-                transparent
-                opacity={cloudOpacity}
-                depthWrite={false}
-              />
-            </mesh>
-          ) : null}
+          <mesh>
+            <sphereGeometry args={[1.006, 64, 64]} />
+            <meshBasicMaterial
+              ref={cloudMatRef}
+              map={cloudsMap}
+              transparent
+              opacity={0}
+              depthWrite={false}
+            />
+          </mesh>
         </group>
 
         <mesh material={atmosphereMaterial} scale={1.05}>

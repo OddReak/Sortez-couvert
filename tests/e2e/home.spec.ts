@@ -10,7 +10,8 @@ test('l’écran principal affiche la ville, la condition et la température', a
   // sous-ligne « … · HH:MM En direct » (données mockées)
   await expect(page.getByText('En direct')).toBeVisible();
   // température héro
-  await expect(page.locator('footer').getByText(/^\d+°$/)).toBeVisible();
+  await expect(page.locator('footer')).toContainText(/\d+°/);
+  await expect(page.locator('footer')).toContainText(/Ressenti/);
   // métriques
   await expect(page.getByText('Vent')).toBeVisible();
   await expect(page.getByText('Humidité')).toBeVisible();
@@ -19,15 +20,37 @@ test('l’écran principal affiche la ville, la condition et la température', a
   await expect(page.getByText('Foreca')).toBeVisible();
 });
 
-test('choisir une heure passe en mode « Prévision »', async ({ page }) => {
+test('la bague au clavier passe en mode « Prévision » puis revient à « En direct »', async ({
+  page,
+}) => {
   await page.goto('/');
-  const strip = page.getByRole('group', { name: 'Choisir l’heure' });
-  await strip.waitFor();
+  const ring = page.getByRole('slider', { name: /Heure affichée/ });
+  await ring.waitFor();
 
-  const chips = strip.getByRole('button');
-  await chips.last().click();
-
+  await ring.focus();
+  for (let i = 0; i < 5; i += 1) await ring.press('ArrowRight');
   await expect(page.getByText(/^Prévision ·/)).toBeVisible();
+
+  await ring.press('Home');
+  await expect(page.getByText('En direct')).toBeVisible();
+});
+
+test('l’alternative non gestuelle (chips) s’affiche en prefers-reduced-motion', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  const strip = page.getByRole('group', { name: 'Choisir l’heure' });
+  await expect(strip).toBeVisible();
+  await expect(
+    page.getByRole('slider', { name: /Heure affichée/ }),
+  ).toHaveCount(0);
+
+  await strip.getByRole('button').last().click();
+  await expect(page.getByText(/^Prévision ·/)).toBeVisible();
+  await context.close();
 });
 
 test('aucune violation d’accessibilité critique ou sérieuse', async ({
