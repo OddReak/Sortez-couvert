@@ -48,13 +48,7 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       // Élargi phase par phase. Le brief exige ≥ 85 % sur src/shared/lib (§19.11).
       include: ['src/shared/lib/**/*.ts', 'api/_lib/**/*.ts'],
-      exclude: [
-        '**/*.{test,spec}.ts',
-        '**/index.ts',
-        '**/*.d.ts',
-        'api/_lib/schemas.ts',
-        'api/_lib/normalize.ts',
-      ],
+      exclude: ['**/*.{test,spec}.ts', '**/index.ts', '**/*.d.ts'],
       thresholds: {
         lines: 85,
         functions: 85,

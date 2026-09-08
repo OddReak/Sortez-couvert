@@ -1,0 +1,29 @@
+{
+  "locations": [
+    {
+      "id": 102988507,
+      "name": "Paris",
+      "country": "France",
+      "timezone": "Europe/Paris",
+      "language": "fr",
+      "adminArea": "Région Île-de-France",
+      "adminArea2": "Paris",
+      "adminArea3": null,
+      "lon": 2.3488,
+      "lat": 48.8534
+    },
+    {
+      "id": 104717560,
+      "name": "Paris",
+      "country": "États-Unis",
+      "timezone": "America/Chicago",
+      "language": "fr",
+      "state": "TX",
+      "adminArea": "Texas",
+      "adminArea2": "Comté de Lamar",
+      "adminArea3": null,
+      "lon": -95.5555,
+      "lat": 33.6609
+    }
+  ]
+}

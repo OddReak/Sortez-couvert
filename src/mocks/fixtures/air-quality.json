@@ -1,0 +1,52 @@
+{
+  "forecast": [
+    {
+      "time": "2026-09-08T11:00+02:00",
+      "pollutant": "Ozone",
+      "pollutantPhrase": "Ozone",
+      "AQI": 21,
+      "AQI_CO": 1,
+      "AQI_NO2": 8,
+      "AQI_O3": 21,
+      "AQI_SO2": 0,
+      "AQI_PM10": 6,
+      "AQI_PM2P5": 8
+    },
+    {
+      "time": "2026-09-08T12:00+02:00",
+      "pollutant": "Ozone",
+      "pollutantPhrase": "Ozone",
+      "AQI": 21,
+      "AQI_CO": 1,
+      "AQI_NO2": 7,
+      "AQI_O3": 21,
+      "AQI_SO2": 0,
+      "AQI_PM10": 6,
+      "AQI_PM2P5": 8
+    },
+    {
+      "time": "2026-09-08T13:00+02:00",
+      "pollutant": "Ozone",
+      "pollutantPhrase": "Ozone",
+      "AQI": 24,
+      "AQI_CO": 1,
+      "AQI_NO2": 6,
+      "AQI_O3": 24,
+      "AQI_SO2": 0,
+      "AQI_PM10": 7,
+      "AQI_PM2P5": 9
+    },
+    {
+      "time": "2026-09-08T14:00+02:00",
+      "pollutant": "Particules PM2.5",
+      "pollutantPhrase": "Particules PM2.5",
+      "AQI": 26,
+      "AQI_CO": 1,
+      "AQI_NO2": 6,
+      "AQI_O3": 23,
+      "AQI_SO2": 0,
+      "AQI_PM10": 8,
+      "AQI_PM2P5": 26
+    }
+  ]
+}

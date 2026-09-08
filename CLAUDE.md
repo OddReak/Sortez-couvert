@@ -201,28 +201,45 @@ Library + Playwright + MSW + axe (tests fumée), devcontainer, CI GitHub Actions
 bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
 `geo.ts` (+ tests), modèle de domaine `domain.ts`.
 
-### Phase 1 — Proxy Foreca _(en cours — branche `feat/phase-1-foreca`)_
+### Phase 1 — Proxy Foreca _(en cours — branche `feat/phase-1-foreca`, PR #2)_
 
-**Partie A (faite, indépendante du schéma Foreca) :**
+**Résultat de la sonde (2026-09-08, Paris) :**
 
-- `scripts/probe-foreca.mjs` — sonde des 8 endpoints du §4.2, sauvegarde les
-  réponses brutes dans `tests/fixtures/probe/`, détecte le mode d'auth
-  (Bearer / `?token=` / ancien flux). **À exécuter par Audric.**
+- Auth : **Bearer statique OK** (pas d'ancien flux user/password à implémenter).
+- `warning` → **403** : les alertes ne sont **pas** dans le plan Foreca d'Audric.
+  → `WeatherSnapshot.warnings` est toujours `[]`, l'endpoint n'est jamais appelé.
+- `air-quality` → 200 : la qualité de l'air **est** dans le plan.
+- Formats notables : `daily.sunrise/sunset` = horloge locale `"HH:MM:SS"` (les
+  epochs sont séparés) ; `daily.moonPhase` = **degrés 0–360** (normalisé en
+  fraction 0–1) ; `daily.confidence` ∈ `g|y|o` ; `current` renvoie `precipRate`
+  (pas `precipAccum`, pas `precipType`).
+
+**Fait :**
+
+- `scripts/probe-foreca.mjs` — sonde des 8 endpoints du §4.2, détecte le mode
+  d'auth. Sorties brutes dans `tests/fixtures/probe/` (gitignoré).
 - `api/_lib/foreca.ts` — client HTTP : auth Bearer (ou `query` via
   `FORECA_AUTH_MODE`), timeout 6 s, 2 retries backoff+jitter sur 5xx/timeout
-  seulement, `ForecaError` typée (401 → 500 interne « clé invalide », 429 avec
-  `Retry-After`). Ne valide pas la forme des réponses.
-- `api/_lib/params.ts` — validation zod des paramètres entrants (bornes
-  lat/lon, liste blanche langue/unités).
-- `api/_lib/kv.ts` — magasin clé-valeur : Upstash Redis si configuré, sinon
-  repli mémoire par instance.
-- `api/_lib/cache.ts` — TTL du §4.3, `withCache()`, en-tête `Cache-Control`.
-  Ne met jamais une erreur en cache.
-- `api/_lib/ratelimit.ts` — 60 req/min/IP, fenêtre fixe.
-- Tests : 46 au total, couverture `api/_lib` ≈ 96 %.
+  seulement, `ForecaError` typée.
+- `api/_lib/params.ts` — validation zod des paramètres entrants.
+- `api/_lib/kv.ts` — Upstash Redis si configuré, repli mémoire sinon.
+- `api/_lib/cache.ts` — TTL du §4.3, `withCache()`, `Cache-Control`.
+- `api/_lib/ratelimit.ts` — 60 req/min/IP.
+- `api/_lib/schemas.ts` — schémas zod **dérivés de la sonde réelle** (champs de
+  mesure `.nullable()` par principe, brief §4.1).
+- `api/_lib/normalize.ts` — Foreca → modèle de domaine.
+- `api/_lib/weather-service.ts` — agrégation : `location` (fuseau) puis
+  `current`+`hourly`+`daily`+`air-quality` en `Promise.allSettled`. `current` et
+  `hourly` obligatoires ; `daily`/`air-quality` en échec → état vide. **5 appels
+  à froid, 0 à chaud.**
+- `api/_lib/search-service.ts` — `location/search` → `Place[]`, cache 24 h.
+- `api/_lib/http.ts` — `withApi()` : rate-limit + traduction des erreurs
+  (BadRequest → 400, Foreca 401 → 503 générique + log, 429 → 503, 5xx → 502).
+- `api/weather.ts` + `api/search.ts` — routes (signature Web/Fetch).
+- `src/mocks/` — MSW mocke Foreca en dev et en test, fixtures dérivées de la
+  sonde dans `src/mocks/fixtures/`.
+- **80 tests**, couverture `src/shared/lib` + `api/_lib` ≈ 98 % / 93 % branches.
 
-**Partie B (bloquée — attend la sortie de la sonde) :**
-
-- `api/_lib/schemas.ts` (zod, dérivé du résultat réel) + `api/_lib/normalize.ts`
-  (Foreca → `WeatherSnapshot`) + `api/weather.ts` + `api/search.ts` + fixtures
-  MSW + `src/shared/lib/symbols.ts` (mapping symboles + test exhaustif).
+**Reste (Phase 2, c'est de l'UI) :** `src/shared/lib/symbols.ts` (mapping
+symbole Foreca → icône filaire + test exhaustif — §4.4). Le code `symbol` passe
+déjà tel quel dans `TimeStep.symbol`.
