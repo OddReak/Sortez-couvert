@@ -1,4 +1,10 @@
-import { useTimeSelection } from '@/features/time-ring/selectionStore';
+import {
+  followNow,
+  getCursorEpoch,
+  isFollowingNow,
+  setCursorEpoch,
+} from '@/features/time-ring/cursor';
+import { useCursorEpoch } from '@/features/time-ring/useCursor';
 import { decodeSymbol } from '@/shared/lib/symbols';
 import { formatClock, nowSeconds } from '@/shared/lib/time';
 import { formatTemp } from '@/shared/lib/units';
@@ -6,25 +12,20 @@ import { WeatherIcon } from '@/shared/ui/WeatherIcon';
 import type { TimeStep } from '@/shared/types/domain';
 
 /**
- * Rangée d'heures horizontalement défilable.
- *
- * Sert d'abord d'interface temporelle intérimaire (la bague arrive en Phase 4),
- * et reste ensuite l'**alternative non gestuelle obligatoire** pour VoiceOver /
- * `prefers-reduced-motion` (brief §8.6).
+ * Alternative non gestuelle obligatoire à la bague (brief §8.6) : rangée
+ * d'heures scrollable. Affichée quand `prefers-reduced-motion` est actif ou via
+ * les réglages. Pilote le même curseur temporel que la bague.
  */
 export function HourStrip({
   hourly,
   timezone,
-  currentEpoch,
 }: {
   hourly: TimeStep[];
   timezone: string;
-  currentEpoch: number;
 }) {
-  const selectedEpoch = useTimeSelection((s) => s.selectedEpoch);
-  const select = useTimeSelection((s) => s.select);
+  useCursorEpoch(); // suit le curseur pour l'état actif
   const now = nowSeconds();
-  const active = selectedEpoch ?? currentEpoch;
+  const active = getCursorEpoch();
 
   return (
     <div
@@ -35,19 +36,19 @@ export function HourStrip({
       {hourly.map((step) => {
         const isActive = Math.abs(step.epoch - active) < 1800;
         const isNow = Math.abs(step.epoch - now) < 1800;
-        const { isNight } = decodeSymbol(step.symbol);
         return (
           <button
             key={step.epoch}
             type="button"
             onClick={() => {
-              select(isNow ? null : step.epoch);
+              if (isNow) followNow();
+              else setCursorEpoch(step.epoch, false);
             }}
             aria-pressed={isActive}
+            aria-current={isNow && isFollowingNow() ? 'true' : undefined}
             aria-label={`${
               isNow ? 'Maintenant' : formatClock(step.epoch, timezone)
             }, ${formatTemp(step.temp)}, ${step.phrase ?? ''}`}
-            data-night={isNight ? '' : undefined}
             className={`flex min-w-14 shrink-0 snap-start flex-col items-center gap-1 rounded-2xl px-2 py-2 transition-colors ${
               isActive ? 'chip-active font-semibold' : 'ink-muted'
             }`}
@@ -55,7 +56,12 @@ export function HourStrip({
             <span className="text-xs tabular-nums">
               {isNow ? 'Maintenant' : formatClock(step.epoch, timezone)}
             </span>
-            <WeatherIcon code={step.symbol} size={20} aria-hidden />
+            <WeatherIcon
+              code={step.symbol}
+              size={20}
+              aria-hidden
+              className={decodeSymbol(step.symbol).isNight ? 'opacity-90' : ''}
+            />
             <span className="text-sm tabular-nums">
               {formatTemp(step.temp)}
             </span>

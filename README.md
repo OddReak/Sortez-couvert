@@ -19,8 +19,8 @@ touche jamais le navigateur).
 | 0     | Fondations (repo, build, tokens, qualité, CI)       | ✅ terminée |
 | 1     | Proxy Foreca (`/api/*`, zod, cache, sonde)          | ✅ terminée |
 | 2     | Squelette UI (layout 15/60/25, thèmes)              | ✅ terminée |
-| 3     | Globe 3D                                            | 🚧 en cours |
-| 4     | Bague temporelle                                    | à venir     |
+| 3     | Globe 3D                                            | ✅ terminée |
+| 4     | Bague temporelle                                    | 🚧 en cours |
 | 5–9   | Lieux, enrichissement, PWA/offline, a11y/perf, prod | à venir     |
 
 Plan détaillé : `docs/PROMPT-MAITRE.md` §16.
