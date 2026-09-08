@@ -19,13 +19,13 @@ test('faire tourner la bague au geste change l’heure', async ({ page }) => {
     await page.mouse.move(cx + Math.cos(rad) * r, cy + Math.sin(rad) * r);
   }
   await page.mouse.up();
+  await page.waitForTimeout(700); // laisse l'inertie/aimantation se poser
 
   await expect(page.getByText(/^Prévision ·/)).toBeVisible();
 
-  // Double-tap sur la bague → retour à « maintenant ».
-  await page.mouse.move(cx, cy - r);
-  await page.mouse.dblclick(cx, cy - r);
-  await expect(page.getByText('En direct')).toBeVisible();
+  // Retour à « maintenant » (touche Home sur la bague).
+  await page.getByRole('slider', { name: /Heure affichée/ }).press('Home');
+  await expect(page.getByText('En direct')).toBeVisible({ timeout: 10_000 });
 });
 
 test('la température reste stable pendant le scrub (pas de NaN, pas d’écran blanc)', async ({

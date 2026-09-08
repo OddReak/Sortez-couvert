@@ -1,10 +1,14 @@
 import { Menu, Search } from 'lucide-react';
-import { Suspense, lazy, useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
-import { DEFAULT_PLACE } from '@/features/location/defaultPlace';
+import { PlacesMenu } from '@/features/location/PlacesMenu';
+import { SearchSheet } from '@/features/location/SearchSheet';
+import { usePlaces } from '@/features/location/placesStore';
+import { useSwipePlaces } from '@/features/location/useSwipePlaces';
 import { MetricGrid } from '@/features/metrics/MetricGrid';
 import { useSettings } from '@/features/settings/store';
 import { useApplyTheme } from '@/features/theme/useApplyTheme';
+import { followNow } from '@/features/time-ring/cursor';
 import { HourStrip } from '@/features/time-ring/HourStrip';
 import { TimeRing } from '@/features/time-ring/TimeRing';
 import { Attribution } from '@/features/weather/Attribution';
@@ -23,15 +27,73 @@ import type { Place, WeatherSnapshot } from '@/shared/types/domain';
 const Globe = lazy(() => import('@/features/globe/Globe'));
 
 export function HomeScreen() {
-  const place = DEFAULT_PLACE;
-  const query = useWeatherSnapshot(place);
+  const place = usePlaces((s) => s.current);
+  const [menu, setMenu] = useState(false);
+  const [search, setSearch] = useState(false);
+
+  if (!place) return null; // garanti par <LocationGate>
 
   return (
     <div className="safe-x mx-auto flex h-dvh max-w-md flex-col bg-[var(--app-ambient)]">
+      <PlaceScreen
+        key={place.id}
+        place={place}
+        onOpenMenu={() => {
+          setMenu(true);
+        }}
+        onOpenSearch={() => {
+          setSearch(true);
+        }}
+      />
+      <PlacesMenu
+        open={menu}
+        onClose={() => {
+          setMenu(false);
+        }}
+      />
+      <SearchSheet
+        open={search}
+        onClose={() => {
+          setSearch(false);
+        }}
+      />
+    </div>
+  );
+}
+
+function PlaceScreen({
+  place,
+  onOpenMenu,
+  onOpenSearch,
+}: {
+  place: Place;
+  onOpenMenu: () => void;
+  onOpenSearch: () => void;
+}) {
+  const query = useWeatherSnapshot(place);
+  const updateCurrentMeta = usePlaces((s) => s.updateCurrentMeta);
+  const swipe = useSwipePlaces();
+
+  // Nouveau lieu → le curseur revient à « maintenant ».
+  useEffect(() => {
+    followNow();
+  }, [place.id]);
+
+  // Affine le nom / fuseau du lieu courant depuis la réponse météo.
+  useEffect(() => {
+    if (query.data) updateCurrentMeta(query.data.place);
+  }, [query.data, updateCurrentMeta]);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col" {...swipe}>
       {query.data ? (
         <LiveConditionsProvider snapshot={query.data}>
           <ThemeSync />
-          <TopBar place={place} />
+          <TopBar
+            place={place}
+            onOpenMenu={onOpenMenu}
+            onOpenSearch={onOpenSearch}
+          />
           <CenterStage place={place} snapshot={query.data} />
           <BottomPanel snapshot={query.data} />
         </LiveConditionsProvider>
@@ -40,6 +102,8 @@ export function HomeScreen() {
           place={place}
           error={query.isError}
           onRetry={query.refetch}
+          onOpenMenu={onOpenMenu}
+          onOpenSearch={onOpenSearch}
         />
       )}
     </div>
@@ -54,28 +118,42 @@ function ThemeSync() {
 
 // ── TOP · 15 % ────────────────────────────────────────────────────────────
 
-function TopBar({ place }: { place: Place }) {
+type BarActions = { onOpenMenu: () => void; onOpenSearch: () => void };
+
+function TopButtons({ onOpenMenu, onOpenSearch }: BarActions) {
+  return (
+    <div className="flex items-center justify-between">
+      <button
+        type="button"
+        aria-label="Ouvrir le menu des lieux"
+        onClick={onOpenMenu}
+        className="grid size-11 place-items-center"
+      >
+        <Menu size={22} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        aria-label="Rechercher une ville"
+        onClick={onOpenSearch}
+        className="grid size-11 place-items-center"
+      >
+        <Search size={22} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function TopBar({
+  place,
+  onOpenMenu,
+  onOpenSearch,
+}: { place: Place } & BarActions) {
   return (
     <header
       className="safe-t flex shrink-0 flex-col justify-start gap-1 px-4 pt-1"
       style={{ flexBasis: '15%' }}
     >
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Ouvrir le menu"
-          className="grid size-11 place-items-center"
-        >
-          <Menu size={22} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          aria-label="Rechercher une ville"
-          className="grid size-11 place-items-center"
-        >
-          <Search size={22} aria-hidden="true" />
-        </button>
-      </div>
+      <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
       <h1 className="text-center text-2xl leading-tight font-bold text-balance">
         {place.name}
       </h1>
@@ -245,18 +323,20 @@ function LoadingLayout({
   place,
   error,
   onRetry,
+  onOpenMenu,
+  onOpenSearch,
 }: {
   place: Place;
   error: boolean;
   onRetry: () => Promise<unknown>;
-}) {
+} & BarActions) {
   return (
     <>
       <header
         className="safe-t flex shrink-0 flex-col gap-2 px-4 pt-1"
         style={{ flexBasis: '15%' }}
       >
-        <div className="h-11" />
+        <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
         <h1 className="text-center text-2xl font-bold">{place.name}</h1>
         <p className="flex justify-center">
           <Skeleton width="12rem" height="0.95rem" />
