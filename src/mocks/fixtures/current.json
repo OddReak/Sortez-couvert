@@ -1,0 +1,22 @@
+{
+  "current": {
+    "time": "2026-09-08T11:00:00+02:00",
+    "symbol": "d200",
+    "symbolPhrase": "en partie nuageux",
+    "temperature": 22.8,
+    "feelsLikeTemp": 22.8,
+    "relHumidity": 61,
+    "dewPoint": 15.1,
+    "windSpeed": 2.3,
+    "windDir": 255,
+    "windDirString": "W",
+    "windGust": 6.8,
+    "precipProb": 8,
+    "precipRate": 0,
+    "cloudiness": 42,
+    "thunderProb": 0,
+    "uvIndex": 3.1,
+    "pressure": 1019.8,
+    "visibility": 10000
+  }
+}

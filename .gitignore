@@ -15,6 +15,10 @@ test-results
 blob-report
 playwright/.cache
 
+# sorties brutes de la sonde Foreca (locales, régénérables) — les fixtures
+# curées vivent dans src/mocks/fixtures/
+tests/fixtures/probe/
+
 # build / outils
 *.tsbuildinfo
 .eslintcache

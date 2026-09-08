@@ -92,6 +92,12 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } },
   },
 
+  // — Mocks MSW : doivent nommer l'URL Foreca pour l'intercepter —
+  {
+    files: ['src/mocks/**/*.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+
   // — Tests unitaires —
   {
     files: [
