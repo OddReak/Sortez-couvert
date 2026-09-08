@@ -1,11 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 
 import { useSettings } from '@/features/settings/store';
-import { useTimeSelection } from '@/features/time-ring/selectionStore';
 import { interpolateValue, nearestStep } from '@/shared/lib/interpolate';
 import { resolveTheme, type ThemePaint } from '@/shared/lib/theme';
-import { nowSeconds } from '@/shared/lib/time';
 import type { Place, TimeStep, WeatherSnapshot } from '@/shared/types/domain';
 
 import { fetchWeather } from './api';
@@ -51,8 +48,23 @@ export function selectConditions(
   selectedEpoch: number | null,
   now: number,
 ): DisplayedConditions {
-  const currentEpoch = snapshot.current.epoch;
-  const atEpoch = selectedEpoch ?? currentEpoch;
+  // `null` = « suit maintenant » → on utilise l'instant réel + les mesures
+  // observées (`snapshot.current`), pas un pas interpolé.
+  if (selectedEpoch === null) {
+    const today = snapshot.daily[0];
+    return {
+      atEpoch: now,
+      isNow: true,
+      step: { ...snapshot.current, epoch: now },
+      theme: resolveTheme({
+        atSeconds: now,
+        sunriseSeconds: today?.sunriseEpoch ?? null,
+        sunsetSeconds: today?.sunsetEpoch ?? null,
+      }),
+    };
+  }
+
+  const atEpoch = selectedEpoch;
   const isNow = Math.abs(atEpoch - now) < 30 * 60;
 
   const hourly = snapshot.hourly;
@@ -79,10 +91,6 @@ export function selectConditions(
     visibility: pickNumeric(hourly, atEpoch, 'visibility'),
   };
 
-  // Si l'instant est « maintenant », on privilégie les mesures observées.
-  const effectiveStep =
-    isNow && selectedEpoch === null ? snapshot.current : step;
-
   const today = snapshot.daily[0];
   const theme = resolveTheme({
     atSeconds: atEpoch,
@@ -90,16 +98,5 @@ export function selectConditions(
     sunsetSeconds: today?.sunsetEpoch ?? null,
   });
 
-  return { atEpoch, isNow, step: effectiveStep, theme };
-}
-
-export function useDisplayedConditions(
-  snapshot: WeatherSnapshot | undefined,
-): DisplayedConditions | null {
-  const selectedEpoch = useTimeSelection((s) => s.selectedEpoch);
-
-  return useMemo(() => {
-    if (!snapshot) return null;
-    return selectConditions(snapshot, selectedEpoch, nowSeconds());
-  }, [snapshot, selectedEpoch]);
+  return { atEpoch, isNow, step, theme };
 }

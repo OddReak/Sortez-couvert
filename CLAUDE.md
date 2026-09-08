@@ -270,7 +270,7 @@ bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
 - **Tests :** 141 unitaires + 5 e2e (écran, sélection d'heure, axe, captures
   clair/sombre). Bundle JS 100 kB gzip (budget §12 : < 180).
 
-### Phase 3 — Globe 3D _(en cours — branche `feat/phase-3-globe`, PR #12)_
+### Phase 3 — Globe 3D _(validée, PR #13)_
 
 - **`src/shared/lib/sun.ts`** — position solaire PURE (formules NOAA abrégées) :
   `subsolarPoint()`, `sunDirection()`, `isSunlit()`. **Les 4 tests obligatoires
@@ -305,6 +305,40 @@ par anisotropy) ; le chunk three est lourd (drei tire beaucoup — envisager de
 le retirer) ; `@react-three/fiber` v9 exige `react <19.3` (notre `^19.2` le
 permet, à surveiller).
 
-**Pas encore fait :** bague gestuelle (Phase 4), géoloc/recherche/favoris
-(Phase 5), bottom sheets + prévisions 10 j + réglages complets (Phase 6). Le
-menu et la loupe sont des boutons inertes.
+### Phase 4 — Bague temporelle _(en cours — branche `feat/phase-4-time-ring`, PR #14)_
+
+Le composant le plus délicat du brief (§8). LE test au pouce sur iPhone.
+
+- **Logique pure + tests :** `angle.ts` (`AngleAccumulator` — **franchissement
+  ±π testé**, le bug classique), `geometry.ts` (1 tour = 12 h, plage
+  −24 h → +72 h, graduations), `physics.ts` (inertie friction 0.94, snapping —
+  **renforcé à < 30 min de maintenant**), `haptics.ts` (`tick()` + détection
+  `navigator.vibrate`, no-op iOS + tick sonore optionnel).
+- **`cursor.ts`** — curseur temporel singleton hors React (brief §8.4) :
+  `subscribeFast` (globe, chaque frame) vs `subscribeThrottled` (DOM, ≤ 11 Hz).
+  **Aucun re-render de `HomeScreen` pendant le scrub.**
+- **`LiveConditionsProvider`** — calcule les conditions au curseur une fois et
+  les diffuse par contexte ; seuls les consommateurs (température, métriques,
+  sous-ligne, thème) se re-rendent, l'arbre passe en `children`.
+- **`TimeRing.tsx`** — bague SVG : graduations rotor pilotées par ref à 60 fps
+  (`setAttribute transform`), repère « maintenant », zone tactile 60 px,
+  **Pointer Events uniquement** + `setPointerCapture` + `touch-action: none`,
+  inertie + aimantation animées en rAF, double-tap → retour à maintenant.
+  `role="slider"` + clavier (←/→ ±1 h, ⇧ ±6 h, Home, PageUp/Down ±24 h) +
+  `aria-live` débouncé 500 ms.
+- **Compensation haptique iOS** (`haptic-pulse.ts`) : micro-impulsion d'échelle
+  sur la graduation franchie (l'API Vibration n'existe pas sur Safari iOS).
+- **Alternative non gestuelle** (`HourStrip`) affichée en `prefers-reduced-
+motion` ou via les réglages (brief §8.6).
+- Le **globe suit le curseur** : `subsolarPoint(getCursorEpoch())` lu dans
+  `useFrame`, nébulosité interpolée sur les pas horaires. Scrub → le soleil se
+  déplace, le thème bascule, la température s'anime (ressort maison).
+- **Écart brief :** `motion` (framer-motion) prévu au §5 mais non utilisé —
+  +40 ko gzip pour un seul ressort. Ressort maison à la place (écrit
+  directement dans le nœud texte, aucun re-render). `motion` sera réintroduit
+  en lazy si une Phase 6 en a vraiment besoin (bottom sheets).
+- **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
+  axe). Bundle initial **104 ko gzip**.
+
+**Pas encore fait :** géoloc/recherche/favoris (Phase 5), bottom sheets +
+prévisions 10 j + réglages complets (Phase 6). Le menu et la loupe sont inertes.
