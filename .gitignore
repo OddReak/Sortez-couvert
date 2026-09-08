@@ -1,0 +1,29 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+# env — seul .env.example est versionné
+.env
+.env.*
+!.env.example
+
+# tests & couverture
+coverage
+playwright-report
+test-results
+blob-report
+playwright/.cache
+
+# build / outils
+*.tsbuildinfo
+.eslintcache
+stats.html
+.vercel
+
+# OS / éditeurs
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.idea

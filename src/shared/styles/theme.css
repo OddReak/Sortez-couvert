@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   TERRA — Design tokens (source unique)
+   Références : docs/PROMPT-MAITRE.md §5 · docs/Brief_UI_UX_Meteo_Terre.pdf · mockup
+   Règle : AUCUNE valeur hexadécimale en dur dans un composant (brief §5).
+
+   ⚠️ Phase 0 : ces valeurs sont celles brutes du mockup. Le contraste AA
+   (texte ≥ 4.5:1, UI ≥ 3:1) — y compris sur 20 points échantillonnés de
+   chaque dégradé aube/crépuscule — sera vérifié par test automatisé et
+   ajusté si besoin en Phase 2 (brief §5.1 / §11). Voir CLAUDE.md.
+   ========================================================================== */
+
+@theme {
+  /* — Couleurs de marque (§5.1) — */
+  --color-primary: #1e3a8a; /* indigo profond : accents, éléments actifs */
+  --color-primary-soft: #bfdbfe; /* bleu clair : états secondaires, halo */
+  --color-surface: #ffffff;
+  --color-ink: #1f2937; /* texte encre (mode clair) */
+  --color-accent: #fbbf24; /* ambre : soleil, UV, alertes modérées */
+
+  /* — Fonds de thème (§5.2) — */
+  --color-bg-day: #f8f9fa;
+  --color-bg-night: #0b0f19;
+
+  /* — Bornes des dégradés aube / crépuscule (interpolés à l'exécution) — */
+  --color-dawn-from: #fbcfa0;
+  --color-dawn-to: #6e63a8;
+  --color-dusk-from: #f59e0b;
+  --color-dusk-to: #312e81;
+
+  /* — Couleurs sémantiques d'alerte (à aligner sur `significance` Foreca, Phase 6) — */
+  --color-warn-yellow: #fbbf24;
+  --color-warn-orange: #f97316;
+  --color-warn-red: #dc2626;
+  --color-warn-violet: #7c3aed;
+
+  /* — Typographie (§5.3) — */
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Roboto, sans-serif;
+
+  --text-city: 1.5rem;
+  --text-city--line-height: 1.2;
+  --text-city--font-weight: 700;
+  --text-subtitle: 0.875rem;
+  --text-metric-label: 0.875rem;
+  --text-metric-value: 1rem;
+  --text-metric-value--font-weight: 600;
+
+  /* — Grille d'espacement 4 pt (§5.4) — */
+  --spacing: 0.25rem;
+
+  /* — Rayons (§5.4) — */
+  --radius-card: 1rem;
+  --radius-chip: 999px;
+}
+
+/* Température principale : clamp fluide (§5.3). Hors @theme (valeur fonction). */
+:root {
+  --text-temp-hero: clamp(4rem, 18vw, 5.5rem);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh; /* jamais 100vh sur iOS (brief §6 / §20) */
+    background-color: var(--color-bg-day);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overscroll-behavior: none;
+  }
+
+  /* Chiffres qui changent : tabular-nums pour ne pas trembler au scrub (§5.3). */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
