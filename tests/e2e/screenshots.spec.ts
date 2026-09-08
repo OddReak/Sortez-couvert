@@ -24,7 +24,8 @@ for (const scheme of ['light', 'dark'] as const) {
 
     await page.goto('/');
     await page.getByRole('heading', { name: 'Paris' }).waitFor();
-    await page.waitForTimeout(1800);
+    await page.locator('canvas').waitFor({ timeout: 15_000 });
+    await page.waitForTimeout(2500);
     await page.screenshot({
       path: test.info().outputPath(`home-${scheme}.png`),
       fullPage: false,
