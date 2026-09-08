@@ -21,9 +21,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm preview',
+    // Build de production + fixtures MSW (VITE_ENABLE_MOCKS via .env.mock).
+    command: 'pnpm preview:mock',
     url: 'http://localhost:4173',
     reuseExistingServer: !isCI,
-    timeout: 120_000,
+    timeout: 180_000,
   },
 });

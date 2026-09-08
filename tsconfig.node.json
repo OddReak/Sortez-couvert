@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023"],
+    // DOM : les specs Playwright ont des callbacks exécutés dans le navigateur
+    // (addInitScript, evaluate). Le code serveur (api/, scripts/) n'en dépend pas.
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
