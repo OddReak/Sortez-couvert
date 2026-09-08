@@ -96,7 +96,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Lighthouse
-        run: pnpm dlx @lhci/cli@0.16.x autorun
+        run: pnpm dlx @lhci/cli@0.15.x autorun
 
   audit:
     name: pnpm audit
