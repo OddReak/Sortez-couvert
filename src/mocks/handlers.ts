@@ -7,13 +7,13 @@ import hourly from './fixtures/forecast-hourly.json';
 import locationMeta from './fixtures/location-meta.json';
 import locationSearch from './fixtures/location-search.json';
 import warning403 from './fixtures/warning-403.json';
+import weatherSnapshot from './fixtures/weather-snapshot.json';
+import { rebaseSnapshot } from './rebase';
+import type { WeatherSnapshot } from '@/shared/types/domain';
 
 /**
- * Mock de Foreca à partir des fixtures dérivées de la sonde réelle
+ * Mock de Foreca (niveau serveur) à partir des fixtures dérivées de la sonde
  * (brief §13). En dev et en test, aucun appel ne sort vers `foreca.net`.
- *
- * Les schémas d'erreur (401, 429, 5xx) se testent au cas par cas via
- * `server.use(...)` — voir `api/_lib/weather-service.test.ts`.
  */
 const FORECA = 'https://weatherapi.foreca.net/api/v1';
 
@@ -33,4 +33,28 @@ export const forecaHandlers: RequestHandler[] = [
   ),
 ];
 
-export const handlers: RequestHandler[] = [...forecaHandlers];
+/**
+ * Mock du proxy `/api/*` (niveau navigateur) — il n'y a pas de Vercel Function
+ * en `vite dev`. Sert un `WeatherSnapshot` normalisé prêt à afficher.
+ */
+export const apiHandlers: RequestHandler[] = [
+  http.get('*/api/weather', () =>
+    HttpResponse.json(rebaseSnapshot(weatherSnapshot as WeatherSnapshot)),
+  ),
+  http.get('*/api/search', () =>
+    HttpResponse.json({
+      results: locationSearch.locations.map((l) => ({
+        id: `${l.lat.toFixed(4)},${l.lon.toFixed(4)}`,
+        name: l.name,
+        country: l.country,
+        adminArea: l.adminArea ?? null,
+        lat: l.lat,
+        lon: l.lon,
+        timezone: l.timezone,
+      })),
+    }),
+  ),
+  http.get('*/api/health', () => HttpResponse.json({ ok: true })),
+];
+
+export const handlers: RequestHandler[] = [...forecaHandlers, ...apiHandlers];

@@ -3,10 +3,11 @@ dist
 dist-ssr
 *.local
 
-# env — seul .env.example est versionné
+# env — seuls .env.example et .env.mock (non secret) sont versionnés
 .env
 .env.*
 !.env.example
+!.env.mock
 
 # tests & couverture
 coverage
