@@ -14,14 +14,15 @@ touche jamais le navigateur).
 
 ## État du projet
 
-| Phase | Contenu                                             | Statut      |
-| ----- | --------------------------------------------------- | ----------- |
-| 0     | Fondations (repo, build, tokens, qualité, CI)       | ✅ terminée |
-| 1     | Proxy Foreca (`/api/*`, zod, cache, sonde)          | ✅ terminée |
-| 2     | Squelette UI (layout 15/60/25, thèmes)              | ✅ terminée |
-| 3     | Globe 3D                                            | ✅ terminée |
-| 4     | Bague temporelle                                    | 🚧 en cours |
-| 5–9   | Lieux, enrichissement, PWA/offline, a11y/perf, prod | à venir     |
+| Phase | Contenu                                       | Statut      |
+| ----- | --------------------------------------------- | ----------- |
+| 0     | Fondations (repo, build, tokens, qualité, CI) | ✅ terminée |
+| 1     | Proxy Foreca (`/api/*`, zod, cache, sonde)    | ✅ terminée |
+| 2     | Squelette UI (layout 15/60/25, thèmes)        | ✅ terminée |
+| 3     | Globe 3D                                      | ✅ terminée |
+| 4     | Bague temporelle                              | ✅ terminée |
+| 5     | Lieux (géoloc, recherche, favoris)            | 🚧 en cours |
+| 6–9   | Enrichissement, PWA/offline, a11y/perf, prod  | à venir     |
 
 Plan détaillé : `docs/PROMPT-MAITRE.md` §16.
 

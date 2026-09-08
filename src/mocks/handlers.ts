@@ -41,6 +41,20 @@ export const apiHandlers: RequestHandler[] = [
   http.get('*/api/weather', () =>
     HttpResponse.json(rebaseSnapshot(weatherSnapshot as WeatherSnapshot)),
   ),
+  http.get('*/api/place', ({ request }) => {
+    const url = new URL(request.url);
+    const lat = Number(url.searchParams.get('lat'));
+    const lon = Number(url.searchParams.get('lon'));
+    return HttpResponse.json({
+      id: `${lat.toFixed(4)},${lon.toFixed(4)}`,
+      name: 'Paris',
+      country: 'France',
+      adminArea: 'Île-de-France',
+      lat,
+      lon,
+      timezone: 'Europe/Paris',
+    });
+  }),
   http.get('*/api/search', () =>
     HttpResponse.json({
       results: locationSearch.locations.map((l) => ({
