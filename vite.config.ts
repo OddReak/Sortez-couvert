@@ -40,14 +40,21 @@ export default defineConfig({
     css: false,
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
+      'api/**/*.{test,spec}.ts',
       'tests/unit/**/*.{test,spec}.{ts,tsx}',
     ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       // Élargi phase par phase. Le brief exige ≥ 85 % sur src/shared/lib (§19.11).
-      include: ['src/shared/lib/**/*.ts'],
-      exclude: ['**/*.{test,spec}.ts', '**/index.ts', '**/*.d.ts'],
+      include: ['src/shared/lib/**/*.ts', 'api/_lib/**/*.ts'],
+      exclude: [
+        '**/*.{test,spec}.ts',
+        '**/index.ts',
+        '**/*.d.ts',
+        'api/_lib/schemas.ts',
+        'api/_lib/normalize.ts',
+      ],
       thresholds: {
         lines: 85,
         functions: 85,

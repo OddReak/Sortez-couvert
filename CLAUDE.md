@@ -192,14 +192,37 @@ VAPID (si v2 push).
 
 ## 9. Journal des phases
 
-### Phase 0 — Fondations _(en cours)_
+### Phase 0 — Fondations _(validée par Audric, PR #1)_
 
-Fait : structure du repo, Vite 6+/React 19/TS strict, Tailwind v4 + tokens
-`@theme`, ESLint 9 flat + Prettier + Husky + lint-staged + commitlint,
-Vitest + Testing Library + Playwright + MSW + axe câblés (tests fumée),
-devcontainer, CI GitHub Actions (typecheck/lint/format/test/build + job
-« aucun secret » + e2e + lighthouse non bloquant + audit), `.env.example`,
-`vercel.json`, `api/health.ts`, helper `geo.ts` (+ tests), modèle de domaine
-`domain.ts`.
+Structure du repo, Vite 8/React 19/TS strict, Tailwind v4 + tokens `@theme`,
+ESLint 9 flat + Prettier + Husky + lint-staged + commitlint, Vitest + Testing
+Library + Playwright + MSW + axe (tests fumée), devcontainer, CI GitHub Actions
+(typecheck/lint/format/test/build + job « aucun secret » + e2e + lighthouse non
+bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
+`geo.ts` (+ tests), modèle de domaine `domain.ts`.
 
-Reste : validation d'Audric (repo démarre dans Codespaces, `pnpm dev` OK).
+### Phase 1 — Proxy Foreca _(en cours — branche `feat/phase-1-foreca`)_
+
+**Partie A (faite, indépendante du schéma Foreca) :**
+
+- `scripts/probe-foreca.mjs` — sonde des 8 endpoints du §4.2, sauvegarde les
+  réponses brutes dans `tests/fixtures/probe/`, détecte le mode d'auth
+  (Bearer / `?token=` / ancien flux). **À exécuter par Audric.**
+- `api/_lib/foreca.ts` — client HTTP : auth Bearer (ou `query` via
+  `FORECA_AUTH_MODE`), timeout 6 s, 2 retries backoff+jitter sur 5xx/timeout
+  seulement, `ForecaError` typée (401 → 500 interne « clé invalide », 429 avec
+  `Retry-After`). Ne valide pas la forme des réponses.
+- `api/_lib/params.ts` — validation zod des paramètres entrants (bornes
+  lat/lon, liste blanche langue/unités).
+- `api/_lib/kv.ts` — magasin clé-valeur : Upstash Redis si configuré, sinon
+  repli mémoire par instance.
+- `api/_lib/cache.ts` — TTL du §4.3, `withCache()`, en-tête `Cache-Control`.
+  Ne met jamais une erreur en cache.
+- `api/_lib/ratelimit.ts` — 60 req/min/IP, fenêtre fixe.
+- Tests : 46 au total, couverture `api/_lib` ≈ 96 %.
+
+**Partie B (bloquée — attend la sortie de la sonde) :**
+
+- `api/_lib/schemas.ts` (zod, dérivé du résultat réel) + `api/_lib/normalize.ts`
+  (Foreca → `WeatherSnapshot`) + `api/weather.ts` + `api/search.ts` + fixtures
+  MSW + `src/shared/lib/symbols.ts` (mapping symboles + test exhaustif).
