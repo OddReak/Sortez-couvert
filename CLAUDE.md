@@ -40,17 +40,18 @@ Husky + commitlint · pnpm · Node 22.
 
 ### Écarts assumés par rapport au brief (à connaître)
 
-| Sujet      | Brief     | Réel                    | Raison                                                                                        |
-| ---------- | --------- | ----------------------- | --------------------------------------------------------------------------------------------- |
-| Node       | 22 LTS    | `>=22` (Codespace : 24) | 24 est désormais LTS et déjà provisionné ; `.nvmrc`/CI/devcontainer restent sur 22            |
-| Vite       | « 6+ »    | 8.x                     | 6+ satisfait ; tout l'écosystème (vitest 5, plugin-react 6) supporte 8                        |
-| TypeScript | non pinné | `~5.9`                  | `typescript-eslint` exige `typescript < 6.1` ; TS 7 (portage Go) casserait le lint type-aware |
-| ESLint     | 9 flat    | 9 flat                  | conforme                                                                                      |
+| Sujet      | Brief     | Réel                    | Raison                                                                                                                           |
+| ---------- | --------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Node       | 22 LTS    | `>=22` (Codespace : 24) | 24 est désormais LTS et déjà provisionné ; `.nvmrc`/CI/devcontainer restent sur 22                                               |
+| Vite       | « 6+ »    | 8.x                     | 6+ satisfait ; tout l'écosystème (vitest 5, plugin-react 6) supporte 8                                                           |
+| TypeScript | non pinné | `~5.9`                  | `typescript-eslint` exige `typescript < 6.1` ; TS 7 (portage Go) casserait le lint type-aware. **Fermer la PR Dependabot TS 6.** |
+| ESLint     | 9 flat    | 9 flat                  | conforme                                                                                                                         |
+| `motion`   | stack §5  | **non installé**        | +40 ko gzip pour un seul ressort (Phase 4) ; ressort maison à la place. Réintroductible en `lazy()` si Phase 6 en a besoin.      |
+| `drei`     | stack §2  | **non installé**        | seul `useTexture` était utilisé ; `TextureLoader` three suffit. À reconsidérer si Phase 8 veut des helpers drei.                 |
 
-Les dépendances `three`, `zustand`, `react-query`, `zod`, `motion`, `luxon`,
-`suncalc`, `idb-keyval`, `lucide-react`, `vite-plugin-pwa` **ne sont pas encore
-installées** : elles arrivent à leur phase respective pour garder la Phase 0
-légère.
+Installées à leur phase : `zod` (1), `three`/`@react-three/fiber` (3),
+`suncalc` (3), `zustand`/`@tanstack/react-query`/`luxon`/`lucide-react` (2),
+`idb-keyval` (5). Restent : `vite-plugin-pwa` (7).
 
 ---
 
@@ -192,7 +193,31 @@ VAPID (si v2 push).
 
 ## 9. Journal des phases
 
-### Phase 0 — Fondations _(validée par Audric, PR #1)_
+### État au 2026-09-08 (fin de session)
+
+- **`main` : Phases 0 → 4 mergées.** Phase 5 en attente dans la **PR #17**
+  (`sync/phase-5` → `main`, rebasée, à merger en rebase).
+- Toutes les branches `feat/phase-N-*` sont sur `origin`. Les branches
+  `sync/phase-N` sont l'artefact du merge stacké : à ignorer une fois #17
+  mergée.
+- **Piège récurrent réglé pour la suite** : ne plus empiler les PRs de phase
+  sur des branches intermédiaires. Chaque nouvelle phase = brancher depuis
+  `origin/main` à jour, PR → `main` directement.
+- **PRs Dependabot ouvertes (#4–#10)** : #9 (TypeScript 6) est à **fermer**
+  (casse `typescript-eslint`). Les autres sont sûres.
+- `gh pr merge` est bloqué pour Claude Code dans ce harness — c'est Audric
+  qui merge (ou `! gh pr merge N --rebase`).
+
+### Pour reprendre (Phase 6 — Enrichissement)
+
+Bottom sheets de détail au tap sur une métrique (graphe 24 h + min/max +
+explication), prévisions journalières 7–10 j (icône, min/max, pluie,
+confiance `g/y/o`), qualité de l'air détaillée (sous-indices EPA déjà dans
+`AQI_*` de la sonde — étendre `AirQualityStep`), alertes (état vide,
+endpoint 403), réglages avancés. La primitive `Sheet` existe déjà
+(`src/shared/ui/Sheet.tsx`). Le graphe 24 h : charte `dataviz` à charger.
+
+### Phase 0 — Fondations _(mergée, PR #1)_
 
 Structure du repo, Vite 8/React 19/TS strict, Tailwind v4 + tokens `@theme`,
 ESLint 9 flat + Prettier + Husky + lint-staged + commitlint, Vitest + Testing
