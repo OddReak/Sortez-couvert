@@ -240,7 +240,7 @@ bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
   sonde dans `src/mocks/fixtures/`.
 - **80 tests**, couverture `src/shared/lib` + `api/_lib` ≈ 98 % / 93 % branches.
 
-### Phase 2 — Squelette UI _(en cours — branche `feat/phase-2-ui-skeleton`, PR #3)_
+### Phase 2 — Squelette UI _(validée, PR #3)_
 
 **Fait :**
 
@@ -270,6 +270,41 @@ bloquant + audit), `.env.example`, `vercel.json`, `api/health.ts`, helper
 - **Tests :** 141 unitaires + 5 e2e (écran, sélection d'heure, axe, captures
   clair/sombre). Bundle JS 100 kB gzip (budget §12 : < 180).
 
-**Pas encore fait (phases suivantes) :** globe (Phase 3), bague gestuelle
-(Phase 4), géoloc/recherche/favoris (Phase 5), bottom sheets + prévisions 10 j +
-réglages complets (Phase 6). Le menu et la loupe sont des boutons inertes.
+### Phase 3 — Globe 3D _(en cours — branche `feat/phase-3-globe`, PR #12)_
+
+- **`src/shared/lib/sun.ts`** — position solaire PURE (formules NOAA abrégées) :
+  `subsolarPoint()`, `sunDirection()`, `isSunlit()`. **Les 4 tests obligatoires
+  du §7.2 passent** (équinoxe → terminateur par les pôles ; solstices → cercle
+  polaire éclairé/dans l'ombre 24 h ; Paris 21 juin 22 h éclairé / 21 déc 17 h 30
+  dans l'ombre) + cross-check indépendant avec `suncalc`.
+- **`src/shared/lib/orthographic.ts`** — projection orthographique + `nightRegion()`
+  (polygone de l'hémisphère nuit) pour le fallback 2D. Même code solaire que le
+  globe WebGL.
+- **`scripts/fetch-textures.mjs`** — télécharge NASA Blue/Black Marble
+  (**domaine public**, `public/textures/CREDITS.md`), redimensionne + webp.
+  Set mobile ≈ 625 ko, total 1,3 Mo (budget §7.4 : mobile < 1,5 Mo).
+- **`src/features/globe/`** :
+  - `GlobeScene` — sphère 96×96, `ShaderMaterial` day/night
+    (`mix(nuit, jour, smoothstep(-0.10, 0.10, dot(normal, sunDir)))` — formule
+    exacte du §7.1), halo fresnel additif `--color-primary-soft`, nuages
+    (opacité pilotée par `cloudiness`), marqueur ville, caméra orientée +
+    **slerp quaternion** au changement de ville, `frameloop="demand"`,
+    `dpr={[1,2]}`, `dispose()` au démontage.
+  - `Fallback2D` — projection SVG + ombre, **obligatoire** (brief §7.5) :
+    déclenché si pas de WebGL, contexte perdu, ou `prefers-reduced-motion`.
+  - `Globe` — n'importe PAS three ; `GlobeCanvas` (et le chunk three) chargé
+    en `lazy()` seulement pour le rendu WebGL. La ville + la température
+    s'affichent avant le globe (§7.4).
+- Chunk `three` ≈ 236 ko gzip, séparé (hors budget §12) ; bundle initial
+  inchangé à **101 ko gzip**.
+- **163 tests** unitaires + e2e (globe WebGL se charge ; reduced-motion →
+  fallback 2D + axe).
+
+**Écarts / à polir (Phase 8) :** léger smear de texture au pôle Nord (atténué
+par anisotropy) ; le chunk three est lourd (drei tire beaucoup — envisager de
+le retirer) ; `@react-three/fiber` v9 exige `react <19.3` (notre `^19.2` le
+permet, à surveiller).
+
+**Pas encore fait :** bague gestuelle (Phase 4), géoloc/recherche/favoris
+(Phase 5), bottom sheets + prévisions 10 j + réglages complets (Phase 6). Le
+menu et la loupe sont des boutons inertes.

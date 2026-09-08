@@ -1,4 +1,5 @@
 import { Menu, Search } from 'lucide-react';
+import { Suspense, lazy } from 'react';
 
 import { DEFAULT_PLACE } from '@/features/location/defaultPlace';
 import { MetricGrid } from '@/features/metrics/MetricGrid';
@@ -14,6 +15,9 @@ import { formatClock, formatDayTime } from '@/shared/lib/time';
 import { formatTemp } from '@/shared/lib/units';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { WeatherIcon } from '@/shared/ui/WeatherIcon';
+
+// Le chunk `three` est chargé après le premier paint (brief §7.4).
+const Globe = lazy(() => import('@/features/globe/Globe'));
 
 export function HomeScreen() {
   const place = DEFAULT_PLACE;
@@ -67,19 +71,19 @@ export function HomeScreen() {
           {(conditions?.isNow ?? true) ? 'Maintenant' : 'Prévision'}
         </p>
 
-        <div
-          className="hairline-border grid aspect-square w-[62%] max-w-64 place-items-center rounded-full border"
-          role="img"
-          aria-label="Aperçu — le globe 3D arrive en Phase 3"
-        >
+        <div className="aspect-square w-[78%] max-w-72">
           {conditions ? (
-            <WeatherIcon
-              code={conditions.step.symbol}
-              label={conditions.step.phrase}
-              size={80}
-            />
+            <Suspense fallback={<GlobeFallback />}>
+              <Globe
+                lat={place.lat}
+                lon={place.lon}
+                atEpoch={conditions.atEpoch}
+                cloudiness={conditions.step.cloudiness}
+                label={place.name}
+              />
+            </Suspense>
           ) : (
-            <Skeleton width="5rem" height="5rem" radius="999px" />
+            <GlobeFallback />
           )}
         </div>
 
@@ -169,6 +173,12 @@ function SubLine({ conditions, timezone, loading }: SubLineProps) {
         </span>
       )}
     </p>
+  );
+}
+
+function GlobeFallback() {
+  return (
+    <span className="hairline-border block aspect-square w-full animate-pulse rounded-full border" />
   );
 }
 
