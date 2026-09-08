@@ -98,6 +98,13 @@ export default tseslint.config(
     rules: { 'no-restricted-syntax': 'off' },
   },
 
+  // — Globe R3F : les props three.js (`args`, `material`, `intensity`…) ne
+  //   sont pas des attributs DOM. —
+  {
+    files: ['src/features/globe/**/*.tsx'],
+    rules: { 'react/no-unknown-property': 'off' },
+  },
+
   // — Tests unitaires —
   {
     files: [

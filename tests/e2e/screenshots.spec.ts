@@ -24,7 +24,7 @@ for (const scheme of ['light', 'dark'] as const) {
 
     await page.goto('/');
     await page.getByRole('heading', { name: 'Paris' }).waitFor();
-    await page.waitForTimeout(700);
+    await page.waitForTimeout(1800);
     await page.screenshot({
       path: test.info().outputPath(`home-${scheme}.png`),
       fullPage: false,
@@ -32,3 +32,13 @@ for (const scheme of ['light', 'dark'] as const) {
     await expect(page.getByText('Foreca')).toBeVisible();
   });
 }
+
+test.describe('fallback 2D', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test('capture — globe 2D', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('img', { name: /rendu 2D/ }).waitFor();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: test.info().outputPath('globe-2d.png') });
+  });
+});
