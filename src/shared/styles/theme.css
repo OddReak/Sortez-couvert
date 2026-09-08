@@ -137,6 +137,17 @@
 @utility chip-active {
   background: color-mix(in srgb, var(--app-ink) 10%, transparent);
 }
+@utility sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 @utility safe-t {
   padding-top: env(safe-area-inset-top);

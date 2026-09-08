@@ -1,5 +1,9 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 
+import { getCursorEpoch } from '@/features/time-ring/cursor';
+import { useCursorEpoch } from '@/features/time-ring/useCursor';
+import type { TimeStep } from '@/shared/types/domain';
+
 import { Fallback2D } from './Fallback2D';
 import { isWebglAvailable, prefersReducedMotion } from './webglSupport';
 
@@ -8,10 +12,8 @@ const GlobeCanvas = lazy(() => import('./GlobeCanvas'));
 export type GlobeProps = {
   lat: number;
   lon: number;
-  /** Instant affiché (secondes epoch). */
-  atEpoch: number;
-  /** % de nébulosité (0–100), ou null. */
-  cloudiness: number | null;
+  /** Pas horaires (−24 h → +72 h) — pour la nébulosité et le fallback. */
+  hourly: TimeStep[];
   label: string;
 };
 
@@ -21,13 +23,7 @@ export type GlobeProps = {
  * fallback 2D si WebGL est indisponible, si le contexte est perdu, ou si
  * `prefers-reduced-motion` est actif (brief §7.5).
  */
-export default function Globe({
-  lat,
-  lon,
-  atEpoch,
-  cloudiness,
-  label,
-}: GlobeProps) {
+export default function Globe({ lat, lon, hourly, label }: GlobeProps) {
   const [use2D, setUse2D] = useState(
     () => !isWebglAvailable() || prefersReducedMotion(),
   );
@@ -44,14 +40,7 @@ export default function Globe({
   }, []);
 
   if (use2D) {
-    return (
-      <Fallback2D
-        lat={lat}
-        lon={lon}
-        date={new Date(atEpoch * 1000)}
-        label={label}
-      />
-    );
+    return <Fallback2DConnected lat={lat} lon={lon} label={label} />;
   }
 
   return (
@@ -59,14 +48,34 @@ export default function Globe({
       <GlobeCanvas
         lat={lat}
         lon={lon}
-        atEpoch={atEpoch}
-        cloudiness={cloudiness}
+        hourly={hourly}
         reducedMotion={prefersReducedMotion()}
         onContextLost={() => {
           setUse2D(true);
         }}
       />
     </Suspense>
+  );
+}
+
+/** Le fallback 2D est statique : il se rafraîchit au rythme lent du curseur. */
+function Fallback2DConnected({
+  lat,
+  lon,
+  label,
+}: {
+  lat: number;
+  lon: number;
+  label: string;
+}) {
+  useCursorEpoch(); // re-render ~11 Hz max quand on scrube
+  return (
+    <Fallback2D
+      lat={lat}
+      lon={lon}
+      date={new Date(getCursorEpoch() * 1000)}
+      label={label}
+    />
   );
 }
 

@@ -1,13 +1,14 @@
 import { Canvas } from '@react-three/fiber';
 
+import type { TimeStep } from '@/shared/types/domain';
+
 import { GlobeScene } from './GlobeScene';
 import { useHighResTextures } from './webglSupport';
 
 export type GlobeCanvasProps = {
   lat: number;
   lon: number;
-  atEpoch: number;
-  cloudiness: number | null;
+  hourly: TimeStep[];
   reducedMotion: boolean;
   onContextLost: () => void;
 };
@@ -19,8 +20,7 @@ export type GlobeCanvasProps = {
 export default function GlobeCanvas({
   lat,
   lon,
-  atEpoch,
-  cloudiness,
+  hourly,
   reducedMotion,
   onContextLost,
 }: GlobeCanvasProps) {
@@ -30,7 +30,7 @@ export default function GlobeCanvas({
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ position: [0, 0, 7], fov: 24 }}
+      camera={{ position: [0, 0, 8.4], fov: 21 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'default' }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener(
@@ -47,8 +47,7 @@ export default function GlobeCanvas({
       <GlobeScene
         lat={lat}
         lon={lon}
-        atEpoch={atEpoch}
-        cloudiness={(cloudiness ?? 0) / 100}
+        hourly={hourly}
         highRes={highRes}
         reducedMotion={reducedMotion}
       />

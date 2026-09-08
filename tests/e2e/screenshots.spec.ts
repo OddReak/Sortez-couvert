@@ -43,3 +43,13 @@ test.describe('fallback 2D', () => {
     await page.screenshot({ path: test.info().outputPath('globe-2d.png') });
   });
 });
+
+test('capture — bague scrubée (Prévision)', async ({ page }) => {
+  await page.goto('/');
+  const ring = page.getByRole('slider', { name: /Heure affichée/ });
+  await ring.waitFor();
+  await ring.focus();
+  for (let i = 0; i < 9; i += 1) await ring.press('ArrowRight');
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: test.info().outputPath('ring-scrubbed.png') });
+});
