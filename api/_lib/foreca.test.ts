@@ -104,6 +104,22 @@ describe('forecaGet — erreurs 4xx (aucun retry)', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('interprète un Retry-After au format date HTTP', async () => {
+    const future = new Date(Date.now() + 120_000).toUTCString();
+    fetchMock.mockResolvedValue(
+      jsonResponse({}, { status: 429, headers: { 'retry-after': future } }),
+    );
+    try {
+      await forecaGet('/api/v1/current/2,48');
+      expect.unreachable();
+    } catch (e) {
+      const err = e as ForecaError;
+      expect(err.status).toBe(429);
+      expect(err.retryAfterSeconds).toBeGreaterThan(60);
+      expect(err.retryAfterSeconds).toBeLessThanOrEqual(120);
+    }
+  });
 });
 
 describe('forecaGet — 5xx et réseau (retries)', () => {
