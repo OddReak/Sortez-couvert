@@ -14,4 +14,7 @@ export async function startMockServiceWorker(): Promise<void> {
 
   const { worker } = await import('./browser');
   await worker.start({ onUnhandledRequest: 'bypass', quiet: true });
+
+  const { seedMockPlace } = await import('./seed');
+  seedMockPlace();
 }

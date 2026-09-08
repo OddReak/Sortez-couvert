@@ -26,8 +26,15 @@ export const searchQuerySchema = z.object({
   lang: z.enum(LANGS).default('fr'),
 });
 
+export const placeQuerySchema = z.object({
+  lat: latitude,
+  lon: longitude,
+  lang: z.enum(LANGS).default('fr'),
+});
+
 export type WeatherQuery = z.infer<typeof weatherQuerySchema>;
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
+export type PlaceQuery = z.infer<typeof placeQuerySchema>;
 
 export class BadRequestError extends Error {
   readonly issues: string[];
@@ -55,3 +62,6 @@ export const parseWeatherQuery = (raw: URLSearchParams): WeatherQuery =>
 
 export const parseSearchQuery = (raw: URLSearchParams): SearchQuery =>
   parse(searchQuerySchema, raw);
+
+export const parsePlaceQuery = (raw: URLSearchParams): PlaceQuery =>
+  parse(placeQuerySchema, raw);

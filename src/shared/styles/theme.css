@@ -118,6 +118,17 @@
     font-variant-numeric: tabular-nums;
   }
 
+  @keyframes terra-sheet-in {
+    from {
+      transform: translateY(12%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     body {
       transition: none;
