@@ -94,8 +94,19 @@ export default tseslint.config(
 
   // — Tests unitaires —
   {
-    files: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.ts'],
+    files: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'api/**/*.{test,spec}.ts',
+      'tests/**/*.ts',
+    ],
     languageOptions: { globals: { ...globals.node } },
+    rules: {
+      // Les mocks (`vi.fn()`, réponses factices) sont typés `any` par nature.
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+    },
   },
 
   prettier,

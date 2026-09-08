@@ -16,8 +16,8 @@ touche jamais le navigateur).
 
 | Phase | Contenu                                             | Statut      |
 | ----- | --------------------------------------------------- | ----------- |
-| 0     | Fondations (repo, build, tokens, qualité, CI)       | ✅ en cours |
-| 1     | Proxy Foreca (`/api/*`, zod, cache, sonde)          | à venir     |
+| 0     | Fondations (repo, build, tokens, qualité, CI)       | ✅ terminée |
+| 1     | Proxy Foreca (`/api/*`, zod, cache, sonde)          | 🚧 en cours |
 | 2     | Squelette UI (layout 15/60/25, thèmes)              | à venir     |
 | 3     | Globe 3D                                            | à venir     |
 | 4     | Bague temporelle                                    | à venir     |
