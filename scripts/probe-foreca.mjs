@@ -74,8 +74,8 @@ function getArg(name) {
 function describeShape(value, depth = 0) {
   if (value === null) return 'null';
   if (Array.isArray(value)) {
-    if (value.length === 0) return 'array(0)';
-    return `array(${value.length}) of ${describeShape(value[0], depth + 1)}`;
+    if (value.length === 0) return { array: 0 };
+    return { array: value.length, of: describeShape(value[0], depth + 1) };
   }
   const t = typeof value;
   if (t !== 'object') return t;
