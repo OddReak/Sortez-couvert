@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { LocationGate } from '@/features/location/LocationGate';
 import { UpdatePrompt } from '@/pwa/UpdatePrompt';
@@ -14,6 +15,7 @@ export function App() {
       </LocationGate>
       <UpdatePrompt />
       <Analytics />
+      <SpeedInsights />
     </AppProviders>
   );
 }
