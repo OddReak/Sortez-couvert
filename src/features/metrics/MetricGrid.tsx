@@ -83,7 +83,7 @@ export function MetricGrid({
   const rows = buildRows(step, units, snapshot);
 
   return (
-    <ul className="flex min-w-[9.5rem] flex-col gap-1">
+    <ul className="flex min-w-[9.5rem] flex-col gap-0">
       {rows.map(({ key, Icon, label, value, hint }) => {
         const content = (
           <>
@@ -112,9 +112,7 @@ export function MetricGrid({
                 {content}
               </button>
             ) : (
-              <span className="flex items-center gap-2.5 py-1.5">
-                {content}
-              </span>
+              <span className="flex items-center gap-2.5 py-1">{content}</span>
             )}
           </li>
         );

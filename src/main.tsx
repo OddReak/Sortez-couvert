@@ -6,11 +6,14 @@ import './shared/styles/theme.css';
 import { App } from './app/App';
 import { startMockServiceWorker } from './mocks/start';
 import { registerServiceWorker } from './pwa/register';
+import { lockPinchZoom } from './shared/lib/viewportLock';
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {
   throw new Error('Élément racine #root introuvable dans index.html');
 }
+
+lockPinchZoom();
 
 const root = createRoot(rootEl);
 

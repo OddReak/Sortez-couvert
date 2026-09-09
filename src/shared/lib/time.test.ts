@@ -4,6 +4,7 @@ import {
   formatClock,
   formatDayTime,
   formatRelativeDay,
+  formatShortDay,
   isSameLocalHour,
   startOfDayEpoch,
 } from './time';
@@ -36,6 +37,16 @@ describe('formatRelativeDay', () => {
     expect(formatRelativeDay(PARIS_10H + 72 * 3600, TZ, now, 'en')).toBe(
       'Friday',
     );
+  });
+});
+
+describe('formatShortDay', () => {
+  const now = PARIS_10H;
+  it('« Auj. » / « Dem. » / jour court', () => {
+    expect(formatShortDay(PARIS_10H + 3 * 3600, TZ, now)).toBe('Auj.');
+    expect(formatShortDay(PARIS_10H + 30 * 3600, TZ, now)).toBe('Dem.');
+    // 2026-09-11 = vendredi → « ven. » en français
+    expect(formatShortDay(PARIS_10H + 72 * 3600, TZ, now)).toBe('ven.');
   });
 });
 
