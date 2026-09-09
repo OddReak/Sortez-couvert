@@ -51,6 +51,7 @@ Husky + commitlint · pnpm · Node 22.
 | `drei`         | stack §2                    | **non installé**             | seul `useTexture` était utilisé ; `TextureLoader` three suffit. À reconsidérer si Phase 8 veut des helpers drei.                                     |
 | splash iOS     | `pwa-asset-generator` §10.2 | `@vite-pwa/assets-generator` | sharp (pas de puppeteer/chromium à installer), intégration native `vite-plugin-pwa` (`pwaAssets`) : génération au build, aucun binaire commité.      |
 | e2e hors ligne | iPhone 15 §13               | Chromium (`Pixel 7`)         | WebKit + `context.setOffline` + service worker plante dans Playwright. Le comportement testé (cache SW / repli IndexedDB) est indépendant du moteur. |
+| Lighthouse PWA | catégorie PWA ≥ 95 §12      | supprimée dans Lighthouse 12 | LHCI bloque sur perf / a11y / best-practices ≥ 0.95 sur le build réel ; installabilité = `tests/unit/manifest.test.ts` + e2e offline.                |
 
 Installées à leur phase : `zod` (1), `three`/`@react-three/fiber` (3),
 `suncalc` (3), `zustand`/`@tanstack/react-query`/`luxon`/`lucide-react` (2),
@@ -200,10 +201,11 @@ VAPID (si v2 push).
 
 ### État au 2026-09-09 (fin de session)
 
-- **`main` : Phases 0 → 6 mergées** (Phase 6 = PR #18).
-- **Phase 7 terminée sur `feat/phase-7-pwa`** — gate verte (typecheck / lint /
-  format / 258 tests unitaires / build / e2e). Bundle initial **~117 ko gzip**
-  (budget §12 < 180) ; précache SW ≈ 611 ko (coquille + polices). PR à ouvrir.
+- **`main` : Phases 0 → 7 mergées** (Phase 7 = PR #19).
+- **Phase 8 terminée sur `feat/phase-8-a11y-perf`** — gate verte (typecheck /
+  lint / format / 263 tests unitaires / build / e2e). Bundle initial
+  **~113 ko gzip** ; précache SW ≈ **444 ko** (−167 ko : polices latin only).
+  Lighthouse local : perf **0.97–0.99**, a11y **1.0**, best-practices **1.0**.
 - **Piège récurrent réglé** : ne plus empiler les PRs de phase sur des branches
   intermédiaires. Chaque nouvelle phase = brancher depuis `origin/main` à jour,
   PR → `main` directement.
@@ -212,21 +214,13 @@ VAPID (si v2 push).
 - `gh pr merge` est bloqué pour Claude Code dans ce harness — c'est Audric
   qui merge (ou `! gh pr merge N --rebase`).
 
-### À valider sur iPhone réel (pré-existant, pas Phase 6/7)
+### Pour reprendre (Phase 9 — Production)
 
-Sur le viewport iPhone 15 en preview, le `CenterStage` (globe + bague) déborde
-légèrement : « MAINTENANT » chevauche la sous-ligne, l'étiquette d'heure
-chevauche la 1ʳᵉ métrique. Les bandeaux (alerte, « Données du … ») accentuent
-le tassement. À traiter en **Phase 8 (polish)** avec le dimensionnement
-globe/bague.
-
-### Pour reprendre (Phase 8 — A11y & perf)
-
-Audit `axe` complet + VoiceOver (checkpoint Audric), `prefers-contrast: more`,
-Lighthouse CI **bloquant** sur build réel (PWA / A11y / Best-Practices ≥ 95 —
-ajouter la catégorie PWA + `screenshots` au manifest), budgets §12 mesurés
-(LCP/INP/CLS/TBT), sous-ensemble des polices Inter (latin only — ~5 woff2
-inutiles précachés), débordement `CenterStage`, `motion` en `lazy` si besoin.
+Projet Vercel + région `cdg1`, `FORECA_API_KEY` sur les 3 environnements,
+domaine, monitoring (Sentry ? Vercel Analytics ?), **page Confidentialité**
+(§14 RGPD) + **page d'aide / installation** en français (§25 — partage avec des
+proches), README « doc de déploiement en français ». Checkpoint : mise en ligne.
+Écarts / limitations connues à documenter dans le README de déploiement.
 
 ### Phase 0 — Fondations _(mergée, PR #1)_
 
@@ -376,7 +370,46 @@ motion` ou via les réglages (brief §8.6).
 - **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
   axe). Bundle initial **104 ko gzip**.
 
-### Phase 7 — PWA & hors ligne _(terminée — branche `feat/phase-7-pwa`)_
+### Phase 8 — A11y & perf _(terminée — branche `feat/phase-8-a11y-perf`)_
+
+- **Focus visible** : `:focus-visible` global (anneau 2 px, token `--app-focus`
+  par schéma) dans `theme.css`.
+- **`prefers-contrast: more`** : `theme.css` (encres à pleine encre, filets
+  marqués) + `resolveTheme(highContrast)` force la surface de texte en pleine
+  couleur (pas de teinte aube/crépuscule). Câblé via `usePrefersContrast()` →
+  `selectConditions` → `LiveConditions`. Testé (`theme.test.ts`, 40 points).
+- **Polices** : `@fontsource-variable/inter` (7 sous-ensembles) → **1 `@font-face`
+  latin-only** (`src/shared/styles/fonts.css`, `@import` dans `theme.css`). Plugin
+  Vite `fontPreloadPlugin` injecte `<link rel=preload>` du woff2 hashé. Précache
+  SW : 611 → 444 ko.
+- **Layout responsive** (§6 réinterprété — multi-appareils) : `HomeScreen` passe
+  de `flexBasis` 15/60/25 rigides à un flux flexible (`shrink-0` haut/bas,
+  `flex-1 min-h-0` centre). Globe = `aspect-square h-full max-h-80 max-w-[86%]`
+  dans un wrapper `grid place-items-center` → se dimensionne sur la hauteur
+  dispo. `PlaceScreen` : `overflow-y-auto` (paysage/écran court → défilement, pas
+  d'écrasement). **Corrige le débordement iPhone SE** (plus de chevauchement
+  MAINTENANT / sous-ligne). `SpringTemp` court-circuité en reduced-motion.
+- **axe partout** : `tests/e2e/_helpers.ts#expectNoA11yViolations` (termine les
+  animations d'abord). `tests/e2e/a11y.spec.ts` : onboarding, ChooseLocation
+  (`?choose=1`, hook mock), recherche, menu, réglages, prévisions, alerte,
+  HourStrip. Specs existants refactorés sur le helper.
+- **Responsive e2e** : `tests/e2e/responsive.spec.ts` (SE / Pro Max / desktop +
+  paysage court) — rendu complet, 0 scroll horizontal, sous-ligne au-dessus du
+  repère « MAINTENANT ».
+- **Lighthouse CI bloquant** (`.lighthouserc.json`, `continue-on-error` retiré) :
+  perf / a11y / best-practices **≥ 0.95** en `error`. Tourne sur le **build
+  réel** (`pnpm build`, écran d'entrée = 1ᵉʳ chargement représentatif) — la
+  catégorie PWA n'existe plus dans Lighthouse 12. `visualizer` sort **hors
+  `dist/`** (`stats.html` racine) sinon LHCI l'audite aussi et plombe le score.
+  `sourcemap: true` (audit `valid-source-maps`). `main.tsx` : SW enregistré
+  `setTimeout(800)` après le 1er rendu (hors TBT ; `requestIdleCallback` cassait
+  l'e2e offline).
+- **Budget bundle** : `scripts/check-bundle-budget.mjs` (chunk `index-*.js`
+  gzip < 180 ko) en CI, job `verify`.
+- **Manifest** : extrait en `src/pwa/manifest.ts`, `tests/unit/manifest.test.ts`.
+- **263 tests** unitaires + e2e. Bundle **~113 ko gzip**.
+
+### Phase 7 — PWA & hors ligne _(mergée, PR #19)_
 
 - **`vite-plugin-pwa` en `injectManifest`** — SW custom `src/pwa/sw.ts`
   (Workbox) : précache coquille (HTML/CSS/`index-*.js`/polices ;

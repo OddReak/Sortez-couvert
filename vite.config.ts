@@ -7,7 +7,45 @@ import type { PluginOption } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { pwaManifest } from './src/pwa/manifest.ts';
+
 const srcDir = fileURLToPath(new URL('./src', import.meta.url));
+
+/**
+ * Précharge la variable Inter (latin) — brief §12. Le nom du woff2 est hashé
+ * au build : on le retrouve dans le bundle et on injecte le `<link rel=preload>`.
+ */
+function fontPreloadPlugin(): PluginOption {
+  return {
+    name: 'terra-font-preload',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        const font = Object.keys(ctx.bundle ?? {}).find((name) =>
+          /inter-latin-[^/]*\.woff2$/.test(name),
+        );
+        if (!font) return html;
+        return {
+          html,
+          tags: [
+            {
+              tag: 'link',
+              injectTo: 'head-prepend',
+              attrs: {
+                rel: 'preload',
+                as: 'font',
+                type: 'font/woff2',
+                crossorigin: '',
+                href: `/${font}`,
+              },
+            },
+          ],
+        };
+      },
+    },
+  };
+}
 
 /**
  * Le mode `mock` (`pnpm build:mock`) sert MSW via son propre service worker
@@ -43,32 +81,7 @@ function pwaPlugin(mode: string): PluginOption {
       ],
     },
     pwaAssets: { config: true },
-    manifest: {
-      id: '/',
-      name: 'Terra — la météo qui se voit',
-      short_name: 'Terra',
-      description:
-        'Tournez le temps, voyez votre monde changer. La météo sur un globe.',
-      start_url: '/?source=pwa',
-      scope: '/',
-      display: 'standalone',
-      orientation: 'portrait',
-      background_color: '#f8f9fa',
-      theme_color: '#f8f9fa',
-      lang: 'fr',
-      dir: 'ltr',
-      categories: ['weather'],
-      shortcuts: [
-        {
-          name: 'Ma position',
-          url: '/?source=pwa&shortcut=locate',
-        },
-        {
-          name: 'Favoris',
-          url: '/?source=pwa&shortcut=favorites',
-        },
-      ],
-    },
+    manifest: pwaManifest,
   });
 }
 
@@ -76,9 +89,12 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
+    fontPreloadPlugin(),
     pwaPlugin(mode),
     visualizer({
-      filename: 'dist/stats.html',
+      // Hors `dist/` : sinon Lighthouse CI (staticDistDir) l'audite aussi et le
+      // gros HTML du treemap plombe le score.
+      filename: 'stats.html',
       gzipSize: true,
       brotliSize: true,
       template: 'treemap',
@@ -96,7 +112,9 @@ export default defineConfig(({ mode }) => ({
     port: 4173,
   },
   build: {
-    sourcemap: false,
+    // Sourcemaps publiées (projet privé) : debug prod + audit Lighthouse
+    // `valid-source-maps`. Non chargées par le navigateur hors devtools.
+    sourcemap: true,
   },
   test: {
     environment: 'jsdom',

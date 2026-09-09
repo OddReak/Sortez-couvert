@@ -1,6 +1,8 @@
 dist
 dist-mock
 dev-dist
+stats.html
+.lighthouseci
 coverage
 playwright-report
 test-results

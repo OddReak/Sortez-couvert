@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+
+import { expectNoA11yViolations } from './_helpers';
 
 const snapshot = JSON.parse(
   readFileSync(
@@ -67,8 +68,16 @@ test('sans réseau : app shell + données en cache + bandeau, jamais d’écran 
     { timeout: 20_000 },
   );
 
-  // « Hors ligne » : toute requête réseau échoue. Un hit du cache SW ou d'IndexedDB
-  // n'est pas une requête réseau → il passe.
+  // Recharge EN LIGNE une fois le SW actif : la coquille + `/api/weather`
+  // passent alors par le SW et sont mis en cache (`terra-api`).
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Paris' })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/Données du /)).toBeVisible();
+
+  // « Hors ligne » : toute requête réseau échoue. Un hit du cache SW ou
+  // d'IndexedDB n'est pas une requête réseau → il passe.
   await page.unrouteAll({ behavior: 'ignoreErrors' });
   await page.route('**/*', (route) => route.abort('internetdisconnected'));
 
@@ -80,12 +89,5 @@ test('sans réseau : app shell + données en cache + bandeau, jamais d’écran 
   await expect(page.getByText(/Données du /)).toBeVisible();
   await expect(page.locator('footer')).toContainText(/\d+°/);
 
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  expect(
-    results.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious',
-    ),
-  ).toEqual([]);
+  await expectNoA11yViolations(page);
 });

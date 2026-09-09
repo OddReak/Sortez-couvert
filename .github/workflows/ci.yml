@@ -43,6 +43,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: 'Budget JS initial (§12, < 180 ko gzip)'
+        run: node scripts/check-bundle-budget.mjs dist
+
       - name: Aucun secret ni appel Foreca direct dans le bundle client
         run: |
           if grep -rEn 'FORECA_API_KEY|VITE_[A-Z0-9_]*(KEY|SECRET|TOKEN)|weatherapi\.foreca\.net' dist ; then
@@ -56,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bundle-stats
-          path: dist/stats.html
+          path: stats.html
           if-no-files-found: ignore
 
   e2e:
@@ -83,8 +86,7 @@ jobs:
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest
-    # Non bloquant en Phase 0 (page placeholder). Devient bloquant en Phase 2.
-    continue-on-error: true
+    # Bloquant depuis la Phase 8 : perf / a11y / best-practices ≥ 0.95 (§12/§13).
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -93,8 +95,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build:mock
+      # Build RÉEL (service worker + manifest ; pas de MSW) — l'écran d'entrée
+      # est représentatif du premier chargement d'un vrai utilisateur.
+      - run: pnpm build
       - name: Lighthouse
+        # Le runner ubuntu-latest fournit Google Chrome (chrome-launcher le trouve).
         run: pnpm dlx @lhci/cli@0.15.x autorun
 
   audit:

@@ -1,5 +1,6 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+
+import { expectNoA11yViolations } from './_helpers';
 
 test('l’écran principal affiche la ville, la condition et la température', async ({
   page,
@@ -58,13 +59,5 @@ test('aucune violation d’accessibilité critique ou sérieuse', async ({
 }) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();
-
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-
-  const blocking = results.violations.filter(
-    (v) => v.impact === 'critical' || v.impact === 'serious',
-  );
-  expect(blocking).toEqual([]);
+  await expectNoA11yViolations(page);
 });

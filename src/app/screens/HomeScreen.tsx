@@ -89,7 +89,10 @@ function PlaceScreen({
   }, [query.data, updateCurrentMeta]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col" {...swipe}>
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+      {...swipe}
+    >
       {query.data ? (
         <LiveConditionsProvider snapshot={query.data}>
           <ThemeSync />
@@ -161,10 +164,7 @@ function TopBar({
   onOpenSearch,
 }: { place: Place } & BarActions) {
   return (
-    <header
-      className="safe-t flex shrink-0 flex-col justify-start gap-1 px-4 pt-1"
-      style={{ flexBasis: '15%' }}
-    >
+    <header className="safe-t flex shrink-0 flex-col gap-1 px-4 pt-1">
       <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
       <h1 className="text-center text-2xl leading-tight font-bold text-balance">
         {place.name}
@@ -197,7 +197,7 @@ function SubLine({ timezone }: { timezone: string }) {
   );
 }
 
-// ── CENTER · 60 % ─────────────────────────────────────────────────────────
+// ── CENTER — prend la place restante (fluide, du petit écran au desktop) ───
 
 function CenterStage({
   place,
@@ -212,24 +212,27 @@ function CenterStage({
   const showChips = forceChips || reduced;
 
   return (
-    <main
-      className="flex min-h-0 grow flex-col items-center justify-center gap-3"
-      style={{ flexBasis: '60%' }}
-    >
-      <p className="ink-muted text-xs tracking-widest uppercase">Maintenant</p>
+    <main className="flex min-h-[15rem] flex-1 flex-col items-center justify-center gap-2 py-2">
+      <p className="ink-muted shrink-0 text-xs tracking-widest uppercase">
+        Maintenant
+      </p>
 
-      <div className="relative aspect-square w-[86%] max-w-80">
-        <Suspense fallback={<GlobeFallback />}>
-          <Globe
-            lat={place.lat}
-            lon={place.lon}
-            hourly={snapshot.hourly}
-            label={place.name}
-          />
-        </Suspense>
-        {!showChips ? (
-          <TimeRing snapshot={snapshot} soundTick={soundTick} />
-        ) : null}
+      {/* Le globe se dimensionne sur la hauteur disponible (aspect carré),
+          plafonné à 20rem, borné en largeur sur les écrans étroits. */}
+      <div className="grid min-h-0 w-full flex-1 place-items-center">
+        <div className="relative aspect-square h-full max-h-80 max-w-[86%]">
+          <Suspense fallback={<GlobeFallback />}>
+            <Globe
+              lat={place.lat}
+              lon={place.lon}
+              hourly={snapshot.hourly}
+              label={place.name}
+            />
+          </Suspense>
+          {!showChips ? (
+            <TimeRing snapshot={snapshot} soundTick={soundTick} />
+          ) : null}
+        </div>
       </div>
 
       <SelectedTimeLabel timezone={place.timezone} />
@@ -244,7 +247,7 @@ function CenterStage({
 function SelectedTimeLabel({ timezone }: { timezone: string }) {
   const { atEpoch, isNow } = useLiveConditions();
   return (
-    <p className="h-5 text-sm font-semibold tabular-nums">
+    <p className="min-h-5 shrink-0 text-center text-sm font-semibold tabular-nums">
       {isNow
         ? formatClock(atEpoch, timezone)
         : formatDayTime(atEpoch, timezone)}
@@ -252,7 +255,7 @@ function SelectedTimeLabel({ timezone }: { timezone: string }) {
   );
 }
 
-// ── BOTTOM · 25 % ─────────────────────────────────────────────────────────
+// ── BOTTOM — température + métriques + attribution ────────────────────────
 
 function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
   const [metric, setMetric] = useState<MetricKey | null>(null);
@@ -260,11 +263,8 @@ function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
   const { atEpoch } = useLiveConditions();
 
   return (
-    <footer
-      className="safe-b flex shrink-0 flex-col gap-2 px-4 pb-2"
-      style={{ flexBasis: '25%' }}
-    >
-      <div className="flex items-end justify-between gap-4">
+    <footer className="safe-b flex shrink-0 flex-col gap-2 px-4 pt-1 pb-2">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <HeroTemperature />
         <Metrics snapshot={snapshot} onSelect={setMetric} />
       </div>
@@ -309,10 +309,19 @@ function SpringTemp({ value }: { value: number | null }) {
   const current = useRef(value ?? 0);
   const target = useRef(value ?? 0);
   const raf = useRef<number | null>(null);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     if (value === null || !Number.isFinite(value)) return;
     target.current = value;
+
+    // Mouvement réduit (brief §11) : la valeur saute à la cible, sans ressort.
+    if (reduced) {
+      current.current = value;
+      if (ref.current)
+        ref.current.textContent = `${String(roundHalfUp(value))}°`;
+      return;
+    }
 
     const step = (): void => {
       const c = current.current;
@@ -331,7 +340,7 @@ function SpringTemp({ value }: { value: number | null }) {
       if (raf.current !== null) cancelAnimationFrame(raf.current);
       raf.current = null;
     };
-  }, [value]);
+  }, [value, reduced]);
 
   if (value === null || !Number.isFinite(value)) return <>—°</>;
   return <span ref={ref}>{`${String(roundHalfUp(value))}°`}</span>;
@@ -371,22 +380,16 @@ function LoadingLayout({
 } & BarActions) {
   return (
     <>
-      <header
-        className="safe-t flex shrink-0 flex-col gap-2 px-4 pt-1"
-        style={{ flexBasis: '15%' }}
-      >
+      <header className="safe-t flex shrink-0 flex-col gap-2 px-4 pt-1">
         <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
         <h1 className="text-center text-2xl font-bold">{place.name}</h1>
         <p className="flex justify-center">
           <Skeleton width="12rem" height="0.95rem" />
         </p>
       </header>
-      <main
-        className="flex grow items-center justify-center"
-        style={{ flexBasis: '60%' }}
-      >
+      <main className="flex min-h-[15rem] flex-1 items-center justify-center p-6">
         {error ? (
-          <p role="alert" className="px-6 text-center text-sm">
+          <p role="alert" className="text-center text-sm">
             Impossible de charger la météo.{' '}
             <button
               type="button"
@@ -400,10 +403,7 @@ function LoadingLayout({
           <GlobeFallback />
         )}
       </main>
-      <footer
-        className="safe-b shrink-0 px-4 pb-2"
-        style={{ flexBasis: '25%' }}
-      >
+      <footer className="safe-b shrink-0 px-4 pb-2">
         <Skeleton width="60%" height="4rem" />
       </footer>
     </>

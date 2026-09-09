@@ -26,6 +26,7 @@ tests/fixtures/probe/
 *.tsbuildinfo
 .eslintcache
 stats.html
+.lighthouseci
 .vercel
 
 # OS / éditeurs
