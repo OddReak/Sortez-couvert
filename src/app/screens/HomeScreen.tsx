@@ -2,6 +2,8 @@ import { Menu, Search } from 'lucide-react';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import { AlertBanner } from '@/features/alerts/AlertBanner';
+import { DailyForecastSheet } from '@/features/forecast/DailyForecastSheet';
+import { ForecastCarousel } from '@/features/forecast/ForecastCarousel';
 import { PlacesMenu } from '@/features/location/PlacesMenu';
 import { SearchSheet } from '@/features/location/SearchSheet';
 import { usePlaces } from '@/features/location/placesStore';
@@ -38,7 +40,7 @@ export function HomeScreen() {
   if (!place) return null; // garanti par <LocationGate>
 
   return (
-    <div className="safe-x mx-auto flex h-dvh max-w-md flex-col bg-[var(--app-ambient)]">
+    <div className="safe-x mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-[var(--app-ambient)]">
       <PlaceScreen
         key={place.id}
         place={place}
@@ -77,6 +79,7 @@ function PlaceScreen({
   const query = useWeatherSnapshot(place);
   const updateCurrentMeta = usePlaces((s) => s.updateCurrentMeta);
   const swipe = useSwipePlaces();
+  const [forecastOpen, setForecastOpen] = useState(false);
 
   // Nouveau lieu → le curseur revient à « maintenant ».
   useEffect(() => {
@@ -110,7 +113,21 @@ function PlaceScreen({
             timezone={place.timezone}
           />
           <CenterStage place={place} snapshot={query.data} />
+          <ForecastCarousel
+            days={query.data.daily}
+            timezone={place.timezone}
+            onOpenDetail={() => {
+              setForecastOpen(true);
+            }}
+          />
           <BottomPanel snapshot={query.data} />
+          <DailyForecastSheet
+            open={forecastOpen}
+            onClose={() => {
+              setForecastOpen(false);
+            }}
+            place={place}
+          />
         </LiveConditionsProvider>
       ) : (
         <LoadingLayout
@@ -212,7 +229,7 @@ function CenterStage({
   const showChips = forceChips || reduced;
 
   return (
-    <main className="flex min-h-[15rem] flex-1 flex-col items-center justify-center gap-2 py-2">
+    <main className="flex min-h-[11rem] flex-1 flex-col items-center justify-center gap-1.5 py-1.5">
       <p className="ink-muted shrink-0 text-xs tracking-widest uppercase">
         Maintenant
       </p>

@@ -16,7 +16,7 @@ export function StaticPage({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-[var(--app-ambient)] text-[var(--app-ink)]">
+    <div className="h-dvh overflow-y-auto overscroll-contain bg-[var(--app-ambient)] text-[var(--app-ink)]">
       <main className="safe-t safe-b safe-x mx-auto flex max-w-md flex-col gap-4 px-5 py-4">
         <Link
           to="/"

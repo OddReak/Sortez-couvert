@@ -47,6 +47,22 @@ export function formatRelativeDay(
   return day.toFormat('cccc');
 }
 
+/** « Auj. » / « Dem. » / « mer. » — version courte pour le carrousel 7 jours. */
+export function formatShortDay(
+  epochSeconds: number,
+  timezone: string,
+  nowSeconds: number,
+  locale: Locale = 'fr',
+): string {
+  const day = at(epochSeconds, timezone, locale).startOf('day');
+  const today = at(nowSeconds, timezone, locale).startOf('day');
+  const diff = day.diff(today, 'days').days;
+
+  if (diff === 0) return locale === 'fr' ? 'Auj.' : 'Today';
+  if (diff === 1) return locale === 'fr' ? 'Dem.' : 'Tmrw';
+  return day.toFormat('ccc');
+}
+
 /** Epoch (s) du début de journée locale pour une date ISO « YYYY-MM-DD ». */
 export function startOfDayEpoch(dateIso: string, timezone: string): number {
   return Math.floor(

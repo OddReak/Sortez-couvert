@@ -37,6 +37,29 @@ test('la sheet Qualité de l’air montre les sous-indices EPA', async ({
   await expect(sheet.getByText(/Polluant dominant/)).toBeVisible();
 });
 
+test('carrousel 7 jours entre le globe et les métriques, tap → détail', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'Paris' }).waitFor();
+
+  const carousel = page.getByRole('region', { name: /Prévisions 7 jours/ });
+  await expect(carousel).toBeVisible();
+  await expect(carousel.getByRole('button')).toHaveCount(7);
+
+  // Placé sous le repère « Maintenant » (globe) et au-dessus des métriques.
+  const now = await page.getByText('Maintenant', { exact: true }).boundingBox();
+  const rail = await carousel.boundingBox();
+  const wind = await page
+    .getByRole('button', { name: /Détail : Vent/ })
+    .boundingBox();
+  expect(rail!.y).toBeGreaterThan(now!.y);
+  expect(rail!.y).toBeLessThan(wind!.y);
+
+  await carousel.getByRole('button').first().click();
+  await expect(page.getByRole('dialog', { name: '7 jours' })).toBeVisible();
+});
+
 test('prévisions 7 jours accessibles depuis le menu', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();
