@@ -1,4 +1,7 @@
+import { Download } from 'lucide-react';
+
 import { usePlaces } from '@/features/location/placesStore';
+import { useInstallPrompt } from '@/pwa/useInstallPrompt';
 import { Sheet } from '@/shared/ui/Sheet';
 
 import { useSettings } from './store';
@@ -86,6 +89,7 @@ export function SettingsSheet({
 }) {
   const s = useSettings();
   const clearPlaces = usePlaces((p) => p.clearAll);
+  const { canInstall, promptInstall } = useInstallPrompt();
 
   return (
     <Sheet open={open} onClose={onClose} title="Réglages">
@@ -140,6 +144,17 @@ export function SettingsSheet({
         />
       </div>
 
+      {canInstall ? (
+        <button
+          type="button"
+          onClick={promptInstall}
+          className="mt-4 flex w-full items-center gap-2 rounded-xl bg-[var(--app-live)] px-3 py-2.5 text-sm font-semibold text-[var(--app-surface)]"
+        >
+          <Download size={16} aria-hidden />
+          Installer Terra
+        </button>
+      ) : null}
+
       <button
         type="button"
         onClick={() => {
@@ -166,6 +181,10 @@ export function SettingsSheet({
             Notifications, géolocalisation en arrière-plan et synchronisation
             hors ligne sont limitées sur iOS. Le dernier relevé de chaque lieu
             reste consultable sans réseau. Détails dans le README.
+          </p>
+          <p>
+            Sur iPhone, installez Terra via le menu Partager de Safari → «
+            Ajouter à l’écran d’accueil ».
           </p>
         </div>
       </details>

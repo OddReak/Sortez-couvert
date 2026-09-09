@@ -10,6 +10,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**',
+      'dist-mock/**',
+      'dev-dist/**',
       'coverage/**',
       'playwright-report/**',
       'test-results/**',
@@ -26,7 +28,11 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.app.json', './tsconfig.node.json'],
+        project: [
+          './tsconfig.app.json',
+          './tsconfig.node.json',
+          './tsconfig.worker.json',
+        ],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -44,11 +50,14 @@ export default tseslint.config(
     },
   },
 
-  // — Fichiers de config JS (pas de projet TS) —
+  // — Fichiers de config JS + config d'outil hors projet TS —
   {
-    files: ['**/*.{js,mjs,cjs}'],
+    files: ['**/*.{js,mjs,cjs}', 'pwa-assets.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
-    languageOptions: { globals: { ...globals.node } },
+    languageOptions: {
+      globals: { ...globals.node },
+      parserOptions: { project: null, projectService: false },
+    },
   },
 
   // — Front React (navigateur) —
@@ -90,6 +99,16 @@ export default tseslint.config(
       '*.config.ts',
     ],
     languageOptions: { globals: { ...globals.node } },
+  },
+
+  // — Service worker : contexte WebWorker, pas de React —
+  {
+    files: ['src/pwa/sw.ts'],
+    languageOptions: { globals: { ...globals.serviceworker } },
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
   },
 
   // — Mocks MSW : doivent nommer l'URL Foreca pour l'intercepter —

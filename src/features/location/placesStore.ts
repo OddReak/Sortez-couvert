@@ -11,6 +11,7 @@ import {
   type StateStorage,
 } from 'zustand/middleware';
 
+import { clearSnapshots } from '@/features/weather/snapshotCache';
 import type { Place } from '@/shared/types/domain';
 
 export const MAX_FAVORITES = 8;
@@ -134,6 +135,7 @@ export const usePlaces = create<PlacesState>()(
           onboardingDone: false,
           geoStatus: 'idle',
         });
+        void clearSnapshots();
       },
     }),
     {

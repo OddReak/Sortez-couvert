@@ -19,6 +19,7 @@ import {
   LiveConditionsProvider,
   useLiveConditions,
 } from '@/features/weather/LiveConditions';
+import { StaleDataBanner } from '@/features/weather/StaleDataBanner';
 import { useWeatherSnapshot } from '@/features/weather/useWeather';
 import { usePrefersReducedMotion } from '@/shared/lib/useMediaQuery';
 import { formatClock, formatDayTime } from '@/shared/lib/time';
@@ -99,6 +100,10 @@ function PlaceScreen({
           />
           <AlertBanner
             warnings={query.data.warnings}
+            timezone={place.timezone}
+          />
+          <StaleDataBanner
+            fetchedAtMs={query.data.fetchedAt}
             timezone={place.timezone}
           />
           <CenterStage place={place} snapshot={query.data} />
