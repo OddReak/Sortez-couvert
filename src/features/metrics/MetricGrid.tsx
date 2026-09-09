@@ -11,8 +11,10 @@ import {
 } from '@/shared/lib/units';
 import type { TimeStep, Units, WeatherSnapshot } from '@/shared/types/domain';
 
+import type { MetricKey } from './metricMeta';
+
 type Row = {
-  key: string;
+  key: MetricKey;
   Icon: ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
@@ -71,27 +73,52 @@ export function MetricGrid({
   step,
   units,
   snapshot,
+  onSelect,
 }: {
   step: TimeStep;
   units: Units;
   snapshot: WeatherSnapshot;
+  onSelect?: (key: MetricKey) => void;
 }) {
   const rows = buildRows(step, units, snapshot);
 
   return (
-    <ul className="flex min-w-[9.5rem] flex-col gap-2">
-      {rows.map(({ key, Icon, label, value, hint }) => (
-        <li key={key} className="flex items-center gap-2.5">
-          <Icon size={17} className="ink-faint shrink-0" aria-hidden />
-          <span className="ink-muted text-sm">{label}</span>
-          <span className="ml-auto text-right">
-            <span className="font-semibold tabular-nums">{value}</span>
-            {hint ? (
-              <span className="ink-muted ml-1 text-xs">{hint}</span>
-            ) : null}
-          </span>
-        </li>
-      ))}
+    <ul className="flex min-w-[9.5rem] flex-col gap-1">
+      {rows.map(({ key, Icon, label, value, hint }) => {
+        const content = (
+          <>
+            <Icon size={17} className="ink-faint shrink-0" aria-hidden />
+            <span className="ink-muted text-sm">{label}</span>
+            <span className="ml-auto text-right">
+              <span className="font-semibold tabular-nums">{value}</span>
+              {hint ? (
+                <span className="ink-muted ml-1 text-xs">{hint}</span>
+              ) : null}
+            </span>
+          </>
+        );
+
+        return (
+          <li key={key}>
+            {onSelect ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(key);
+                }}
+                aria-label={`Détail : ${label}, ${value}`}
+                className="-mx-2 flex min-h-11 w-[calc(100%+1rem)] items-center gap-2.5 rounded-lg px-2"
+              >
+                {content}
+              </button>
+            ) : (
+              <span className="flex items-center gap-2.5 py-1.5">
+                {content}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

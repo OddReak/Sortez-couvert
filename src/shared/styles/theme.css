@@ -29,11 +29,22 @@
   --color-dusk-from: #f59e0b;
   --color-dusk-to: #312e81;
 
-  /* — Couleurs sémantiques d'alerte (à aligner sur `significance` Foreca, Phase 6) — */
+  /* — Couleurs sémantiques d'alerte (alignées sur `significance` Foreca) — */
   --color-warn-yellow: #fbbf24;
   --color-warn-orange: #f97316;
   --color-warn-red: #dc2626;
   --color-warn-violet: #7c3aed;
+
+  /* — Vert « tout va bien » : confiance haute, qualité de l'air bonne — */
+  --color-ok: #16a34a;
+
+  /* — Bandes qualité de l'air, échelle EPA (§9.8 / §11) — */
+  --color-aqi-good: #16a34a;
+  --color-aqi-moderate: #ca8a04;
+  --color-aqi-sensitive: #ea580c;
+  --color-aqi-unhealthy: #dc2626;
+  --color-aqi-very-unhealthy: #7c3aed;
+  --color-aqi-hazardous: #881337;
 
   /* — Typographie (§5.3) — */
   --font-sans:

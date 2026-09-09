@@ -151,10 +151,24 @@ export function SettingsSheet({
         Effacer mes lieux et repartir de zéro
       </button>
 
-      <p className="ink-muted mt-3 text-center text-[0.6875rem]">
-        Vibration au passage d’heure : non disponible sur iPhone (Safari) — une
-        pulsation visuelle la remplace.
-      </p>
+      <details className="mt-3 text-[0.6875rem]">
+        <summary className="ink-muted cursor-pointer">À propos</summary>
+        <div className="ink-muted mt-2 flex flex-col gap-1.5">
+          <p>
+            <span className="font-semibold">Terra</span> — météo fournie par
+            Foreca.
+          </p>
+          <p>
+            Vibration au passage d’heure : non disponible sur iPhone (Safari) —
+            une pulsation visuelle la remplace.
+          </p>
+          <p>
+            Notifications, géolocalisation en arrière-plan et synchronisation
+            hors ligne sont limitées sur iOS. Le dernier relevé de chaque lieu
+            reste consultable sans réseau. Détails dans le README.
+          </p>
+        </div>
+      </details>
     </Sheet>
   );
 }

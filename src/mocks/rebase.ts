@@ -16,6 +16,13 @@ export function rebaseSnapshot(
     new Date(
       (Date.parse(iso) || nowSeconds * 1000) + delta * 1000,
     ).toISOString();
+  // Décalage en jours entiers, pour recaler les dates journalières sur « today ».
+  const dayDelta = Math.round(delta / 86400);
+  const shiftDate = (date: string): string => {
+    const d = new Date(`${date}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + dayDelta);
+    return d.toISOString().slice(0, 10);
+  };
 
   return {
     ...snapshot,
@@ -32,6 +39,7 @@ export function rebaseSnapshot(
     })),
     daily: snapshot.daily.map((d) => ({
       ...d,
+      date: shiftDate(d.date),
       sunriseEpoch: d.sunriseEpoch === null ? null : d.sunriseEpoch + delta,
       sunsetEpoch: d.sunsetEpoch === null ? null : d.sunsetEpoch + delta,
     })),

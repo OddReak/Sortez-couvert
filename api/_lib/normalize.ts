@@ -6,6 +6,7 @@
 import { normalizePlaceId } from '../../src/shared/lib/geo';
 import type {
   AirQualityStep,
+  AqiPollutant,
   DayStep,
   ForecastConfidence,
   Place,
@@ -129,11 +130,34 @@ export function normalizeDaily(raw: ForecaDailyStep): DayStep {
   };
 }
 
+const AQI_SUBINDEX_KEYS: [keyof ForecaAirQualityStep, AqiPollutant][] = [
+  ['AQI_CO', 'co'],
+  ['AQI_NO2', 'no2'],
+  ['AQI_O3', 'o3'],
+  ['AQI_SO2', 'so2'],
+  ['AQI_PM10', 'pm10'],
+  ['AQI_PM2P5', 'pm25'],
+];
+
+function normalizeSubIndices(
+  raw: ForecaAirQualityStep,
+): AirQualityStep['subIndices'] {
+  const out: Partial<Record<AqiPollutant, number>> = {};
+  for (const [forecaKey, pollutant] of AQI_SUBINDEX_KEYS) {
+    const value = raw[forecaKey];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      out[pollutant] = value;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 export function normalizeAirQuality(raw: ForecaAirQualityStep): AirQualityStep {
   return {
     time: raw.time,
     aqi: raw.AQI,
     pollutant: raw.pollutantPhrase ?? raw.pollutant,
+    subIndices: normalizeSubIndices(raw),
   };
 }
 

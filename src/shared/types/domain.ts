@@ -72,10 +72,18 @@ export type DayStep = {
   confidence: ForecastConfidence | null;
 };
 
+/** Polluants suivis par l'échelle EPA (sous-indices `AQI_*` Foreca). */
+export type AqiPollutant = 'co' | 'no2' | 'o3' | 'so2' | 'pm10' | 'pm25';
+
 export type AirQualityStep = {
   time: string;
   aqi: number | null;
   pollutant: string | null;
+  /**
+   * Sous-indices EPA par polluant. `null` si le plan Foreca ne les renvoie
+   * pas ; sinon un objet partiel (un polluant absent = clé absente).
+   */
+  subIndices: Partial<Record<AqiPollutant, number>> | null;
 };
 
 /**
