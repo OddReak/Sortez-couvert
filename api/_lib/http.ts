@@ -1,9 +1,9 @@
 /**
  * Helpers de réponse HTTP pour les routes `/api/*` (signature Web/Fetch).
  */
-import { BadRequestError } from './params';
-import { ForecaError } from './foreca';
-import { checkRateLimit, clientIp } from './ratelimit';
+import { BadRequestError } from './params.js';
+import { ForecaError } from './foreca.js';
+import { checkRateLimit, clientIp } from './ratelimit.js';
 
 export function json(
   data: unknown,

@@ -1,0 +1,17 @@
+# Fichiers de test colocalisés dans api/ : Vercel transforme tout fichier
+# `api/*.ts` sans préfixe `_` en fonction serverless. Sans cette exclusion,
+# `api/weather.test.ts` devient une route `/api/weather.test` qui plante.
+api/**/*.test.ts
+
+# Secrets & artefacts locaux — ne jamais téléverser (les variables réelles
+# vivent dans les Environment Variables du projet Vercel).
+.env
+.env.*
+!.env.example
+.vercel
+dist-mock
+dev-dist
+coverage
+playwright-report
+test-results
+stats.html

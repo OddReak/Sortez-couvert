@@ -10,19 +10,19 @@
  * (`Promise.allSettled` : `daily` ou `air-quality` en échec = état vide, pas
  * d'écran cassé). `current` et `hourly` restent obligatoires.
  */
-import { toForecaLocation } from '../../src/shared/lib/geo';
-import type { Place, WeatherSnapshot } from '../../src/shared/types/domain';
-import { withCache } from './cache';
-import { forecaGet } from './foreca';
-import { buildSnapshot, type SnapshotParts } from './normalize';
-import type { WeatherQuery } from './params';
-import { resolvePlace } from './place-service';
+import { toForecaLocation } from '../../src/shared/lib/geo.js';
+import type { Place, WeatherSnapshot } from '../../src/shared/types/domain.js';
+import { withCache } from './cache.js';
+import { forecaGet } from './foreca.js';
+import { buildSnapshot, type SnapshotParts } from './normalize.js';
+import type { WeatherQuery } from './params.js';
+import { resolvePlace } from './place-service.js';
 import {
   forecaAirQualityResponseSchema,
   forecaCurrentResponseSchema,
   forecaDailyResponseSchema,
   forecaHourlyResponseSchema,
-} from './schemas';
+} from './schemas.js';
 
 const HOURLY_PERIODS = 72;
 const DAILY_PERIODS = 10;

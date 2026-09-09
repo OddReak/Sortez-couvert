@@ -4,7 +4,7 @@
  * TTL par type de donnée (brief §4.3). Le cache serveur protège le quota
  * Foreca ; l'en-tête `Cache-Control` protège l'origine via le CDN Vercel.
  */
-import { getKvStore } from './kv';
+import { getKvStore } from './kv.js';
 
 export type CacheKind =
   | 'current'

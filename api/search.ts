@@ -1,10 +1,10 @@
 /**
  * GET /api/search?q&lang — recherche de ville (brief §4.2).
  */
-import { cacheControl } from './_lib/cache';
-import { json, withApi } from './_lib/http';
-import { parseSearchQuery } from './_lib/params';
-import { searchPlaces } from './_lib/search-service';
+import { cacheControl } from './_lib/cache.js';
+import { json, withApi } from './_lib/http.js';
+import { parseSearchQuery } from './_lib/params.js';
+import { searchPlaces } from './_lib/search-service.js';
 
 export const config = { runtime: 'nodejs' } as const;
 
