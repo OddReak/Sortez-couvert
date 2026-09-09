@@ -9,17 +9,18 @@ doute, c'est lui qui tranche. Ce fichier en est le résumé opérationnel.
 
 ## 1. Commandes
 
-| Besoin           | Commande                                |
-| ---------------- | --------------------------------------- |
-| Dev              | `pnpm dev` (port 5173)                  |
-| Typecheck        | `pnpm typecheck`                        |
-| Lint             | `pnpm lint` / `pnpm lint:fix`           |
-| Format           | `pnpm format` / `pnpm format:check`     |
-| Tests unitaires  | `pnpm test` / `pnpm test:watch`         |
-| Couverture       | `pnpm test:coverage`                    |
-| Tests E2E        | `pnpm test:e2e` (Playwright, iPhone 15) |
-| Build            | `pnpm build` (typecheck + `vite build`) |
-| Preview du build | `pnpm preview` (port 4173)              |
+| Besoin           | Commande                                                         |
+| ---------------- | ---------------------------------------------------------------- |
+| Dev              | `pnpm dev` (port 5173)                                           |
+| Typecheck        | `pnpm typecheck`                                                 |
+| Lint             | `pnpm lint` / `pnpm lint:fix`                                    |
+| Format           | `pnpm format` / `pnpm format:check`                              |
+| Tests unitaires  | `pnpm test` / `pnpm test:watch`                                  |
+| Couverture       | `pnpm test:coverage`                                             |
+| Tests E2E        | `pnpm test:e2e` (Playwright, iPhone 15)                          |
+| Build            | `pnpm build` (typecheck + `vite build`)                          |
+| Preview du build | `pnpm preview` (4173) · `pnpm preview:real` (4174, SW PWA actif) |
+| Assets PWA       | `pnpm generate:pwa-assets` (icônes + splash iOS)                 |
 
 **Fin de chaque phase :** `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`
 doivent être verts. Ensuite : compte rendu, arrêt, attente du feu vert d'Audric.
@@ -40,18 +41,21 @@ Husky + commitlint · pnpm · Node 22.
 
 ### Écarts assumés par rapport au brief (à connaître)
 
-| Sujet      | Brief     | Réel                    | Raison                                                                                                                           |
-| ---------- | --------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Node       | 22 LTS    | `>=22` (Codespace : 24) | 24 est désormais LTS et déjà provisionné ; `.nvmrc`/CI/devcontainer restent sur 22                                               |
-| Vite       | « 6+ »    | 8.x                     | 6+ satisfait ; tout l'écosystème (vitest 5, plugin-react 6) supporte 8                                                           |
-| TypeScript | non pinné | `~5.9`                  | `typescript-eslint` exige `typescript < 6.1` ; TS 7 (portage Go) casserait le lint type-aware. **Fermer la PR Dependabot TS 6.** |
-| ESLint     | 9 flat    | 9 flat                  | conforme                                                                                                                         |
-| `motion`   | stack §5  | **non installé**        | +40 ko gzip pour un seul ressort (Phase 4) ; ressort maison à la place. Réintroductible en `lazy()` si Phase 6 en a besoin.      |
-| `drei`     | stack §2  | **non installé**        | seul `useTexture` était utilisé ; `TextureLoader` three suffit. À reconsidérer si Phase 8 veut des helpers drei.                 |
+| Sujet          | Brief                       | Réel                         | Raison                                                                                                                                               |
+| -------------- | --------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node           | 22 LTS                      | `>=22` (Codespace : 24)      | 24 est désormais LTS et déjà provisionné ; `.nvmrc`/CI/devcontainer restent sur 22                                                                   |
+| Vite           | « 6+ »                      | 8.x                          | 6+ satisfait ; tout l'écosystème (vitest 5, plugin-react 6) supporte 8                                                                               |
+| TypeScript     | non pinné                   | `~5.9`                       | `typescript-eslint` exige `typescript < 6.1` ; TS 7 (portage Go) casserait le lint type-aware. **Fermer la PR Dependabot TS 6.**                     |
+| ESLint         | 9 flat                      | 9 flat                       | conforme                                                                                                                                             |
+| `motion`       | stack §5                    | **non installé**             | +40 ko gzip pour un seul ressort (Phase 4) ; ressort maison à la place. Réintroductible en `lazy()` si Phase 6 en a besoin.                          |
+| `drei`         | stack §2                    | **non installé**             | seul `useTexture` était utilisé ; `TextureLoader` three suffit. À reconsidérer si Phase 8 veut des helpers drei.                                     |
+| splash iOS     | `pwa-asset-generator` §10.2 | `@vite-pwa/assets-generator` | sharp (pas de puppeteer/chromium à installer), intégration native `vite-plugin-pwa` (`pwaAssets`) : génération au build, aucun binaire commité.      |
+| e2e hors ligne | iPhone 15 §13               | Chromium (`Pixel 7`)         | WebKit + `context.setOffline` + service worker plante dans Playwright. Le comportement testé (cache SW / repli IndexedDB) est indépendant du moteur. |
 
 Installées à leur phase : `zod` (1), `three`/`@react-three/fiber` (3),
 `suncalc` (3), `zustand`/`@tanstack/react-query`/`luxon`/`lucide-react` (2),
-`idb-keyval` (5). Restent : `vite-plugin-pwa` (7).
+`idb-keyval` (5), `vite-plugin-pwa` + `workbox-*` + `@vite-pwa/assets-generator`
+(7). Tout est en place.
 
 ---
 
@@ -62,8 +66,9 @@ api/            Vercel Functions — proxy Foreca (la clé reste serveur)
   health.ts     GET /api/health (sonde, sans secret)
   _lib/         (Phase 1) client HTTP, cache, ratelimit, schemas zod
 docs/           Brief maître + brief design + mockup
-public/         textures/ icons/ splash/ + favicon.svg + manifest (Phase 7)
-scripts/        (Phase 1+) fetch-textures, generate-pwa-assets, probe-foreca
+public/         textures/ + favicon.svg + pwa-source.svg (source icônes/splash)
+                icônes PWA + splash iOS : générés au build (non commités)
+scripts/        (Phase 1+) fetch-textures, probe-foreca
 src/
   app/          bootstrap, providers, router
   features/
@@ -78,7 +83,7 @@ src/
     lib/        units, time, sun, symbols, interpolate, geo
     types/      domain.ts (modèle de domaine figé)
     styles/     theme.css (tokens @theme — SOURCE UNIQUE des couleurs)
-  pwa/          service worker custom, update/install prompts (Phase 7)
+  pwa/          sw.ts (SW Workbox custom), register.ts, UpdatePrompt, install (Phase 7)
   mocks/        MSW (handlers, serveur node)
 tests/          unit/ e2e/ fixtures/ + setup.ts
 ```
@@ -195,10 +200,10 @@ VAPID (si v2 push).
 
 ### État au 2026-09-09 (fin de session)
 
-- **`main` : Phases 0 → 5 mergées** (PR #16 + #17).
-- **Phase 6 terminée sur `feat/phase-6-enrichment`** — gate verte
-  (typecheck / lint / format / 244 tests unitaires / build / 27 e2e). Bundle
-  initial **115,7 ko gzip** (budget §12 < 180). PR à ouvrir → `main` direct.
+- **`main` : Phases 0 → 6 mergées** (Phase 6 = PR #18).
+- **Phase 7 terminée sur `feat/phase-7-pwa`** — gate verte (typecheck / lint /
+  format / 258 tests unitaires / build / e2e). Bundle initial **~117 ko gzip**
+  (budget §12 < 180) ; précache SW ≈ 611 ko (coquille + polices). PR à ouvrir.
 - **Piège récurrent réglé** : ne plus empiler les PRs de phase sur des branches
   intermédiaires. Chaque nouvelle phase = brancher depuis `origin/main` à jour,
   PR → `main` directement.
@@ -207,21 +212,21 @@ VAPID (si v2 push).
 - `gh pr merge` est bloqué pour Claude Code dans ce harness — c'est Audric
   qui merge (ou `! gh pr merge N --rebase`).
 
-### À valider sur iPhone réel (pré-existant, pas Phase 6)
+### À valider sur iPhone réel (pré-existant, pas Phase 6/7)
 
 Sur le viewport iPhone 15 en preview, le `CenterStage` (globe + bague) déborde
 légèrement : « MAINTENANT » chevauche la sous-ligne, l'étiquette d'heure
-chevauche la 1ʳᵉ métrique. Le bandeau d'alerte accentue le tassement quand il
-est présent (`?alerts=1` ; jamais en prod, endpoint 403). À traiter en
-**Phase 8 (polish)** avec le dimensionnement globe/bague.
+chevauche la 1ʳᵉ métrique. Les bandeaux (alerte, « Données du … ») accentuent
+le tassement. À traiter en **Phase 8 (polish)** avec le dimensionnement
+globe/bague.
 
-### Pour reprendre (Phase 7 — PWA & hors ligne)
+### Pour reprendre (Phase 8 — A11y & perf)
 
-`vite-plugin-pwa` (service worker custom), manifest complet (§10.1), précache
-de l'app shell, `WeatherSnapshot` par lieu en IndexedDB + bandeau « Données
-du … » (§9.11), toast de mise à jour du SW (§9.12), splash/icônes iOS
-(`scripts/generate-pwa-assets`). C'est Audric qui installe la PWA et teste
-offline / iOS.
+Audit `axe` complet + VoiceOver (checkpoint Audric), `prefers-contrast: more`,
+Lighthouse CI **bloquant** sur build réel (PWA / A11y / Best-Practices ≥ 95 —
+ajouter la catégorie PWA + `screenshots` au manifest), budgets §12 mesurés
+(LCP/INP/CLS/TBT), sous-ensemble des polices Inter (latin only — ~5 woff2
+inutiles précachés), débordement `CenterStage`, `motion` en `lazy` si besoin.
 
 ### Phase 0 — Fondations _(mergée, PR #1)_
 
@@ -371,7 +376,50 @@ motion` ou via les réglages (brief §8.6).
 - **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
   axe). Bundle initial **104 ko gzip**.
 
-### Phase 6 — Enrichissement _(terminée — branche `feat/phase-6-enrichment`)_
+### Phase 7 — PWA & hors ligne _(terminée — branche `feat/phase-7-pwa`)_
+
+- **`vite-plugin-pwa` en `injectManifest`** — SW custom `src/pwa/sw.ts`
+  (Workbox) : précache coquille (HTML/CSS/`index-*.js`/polices ;
+  `manifest.webmanifest` ajouté d'office — **ne PAS le remettre dans les globs**,
+  sinon `add-to-cache-list-conflicting-entries` → SW ne s'enregistre pas) ;
+  `NavigationRoute` → `index.html` ; CacheFirst textures + fonts gstatic 30 j ;
+  `StaleWhileRevalidate` `/assets/*.{js,css}` (le chunk three ~890 ko hors
+  précache, dispo offline après 1ʳᵉ visite) ; NetworkFirst `/api/*` timeout 3 s,
+  jamais d'erreur en cache. `skipWaiting` **jamais** auto (message `SKIP_WAITING`).
+- **`src/pwa/register.ts`** — `registerSW` de `virtual:pwa-register` (`immediate`),
+  store `useSyncExternalStore` `{ needRefresh, offlineReady }`. **No-op en DEV /
+  `VITE_ENABLE_MOCKS`** (MSW tient le SW en mock). `UpdatePrompt` = toast
+  « Nouvelle version · Recharger » (§9.12). `useInstallPrompt` +
+  bouton « Installer Terra » dans les réglages (Android/desktop ; iOS = message).
+- **`mode: 'mock'`** : plugin PWA en `disable: true` (SW MSW seul en `build:mock` ;
+  `virtual:pwa-register` reste résolvable). Config Vite → `defineConfig(({mode})…)`.
+- **`build:mock` sort dans `dist-mock/`** (pas `dist/`) — sinon les 2 `webServer`
+  Playwright (`preview:mock` + `preview:real`) écrasent le même `dist/` et
+  servent tous les deux le dernier build. `.lighthouserc.json` → `./dist-mock`.
+  eslint/prettier ignorent `dist-mock` + `dev-dist`.
+- **Cache hors ligne** : `snapshotCache.ts` (idb-keyval, `terra:snapshot:<id>`),
+  `resolveWeather()` = fetch → sauvegarde ; échec → dernier snapshot du lieu.
+  `StaleDataBanner` (`fetchedAt` > 20 min) monté à côté d'`AlertBanner`.
+  `rebaseSnapshot` inchangé. `clearAll` (réglages) purge aussi les snapshots.
+- **Assets** : `pwa-assets.config.ts` + `@vite-pwa/assets-generator` — icônes
+  192/512/maskable + 48 `apple-touch-startup-image` (12 iPhones × 2 orient. × 2
+  thèmes), **générés au build**, source `public/pwa-source.svg`. `sharp: true`
+  dans `pnpm-workspace.yaml`.
+- **`tsconfig.worker.json`** (lib WebWorker, `exactOptionalPropertyTypes: false`
+  — les plugins Workbox), ajouté à `pnpm typecheck` + `eslint` (globals
+  serviceworker). `pwa-assets.config.ts` hors projet TS (eslint `disableTypeChecked`).
+- **`vercel.json`** : `Cache-Control: must-revalidate` sur `/sw.js` +
+  `/manifest.webmanifest`. CSP déjà OK (`worker-src`, `manifest-src`).
+- **e2e** : `tests/e2e/offline.spec.ts` sur **build réel** (`preview:real` :4174,
+  2ᵉ `webServer`) + **Chromium** (`offline-chromium`, `Pixel 7`) — WebKit +
+  `setOffline` + SW plante dans Playwright. Le test : onboarding + géoloc →
+  météo → SW actif → `route(** → abort)` + reload → app shell + bandeau + °.
+  Les specs iPhone 15 ignorent `offline.spec.ts` (`testIgnore`). CI : installer
+  `webkit chromium`.
+- **258 tests** unitaires (+14 : snapshotCache, resolveWeather, StaleDataBanner,
+  register, UpdatePrompt) + e2e. Bundle **~117 ko gzip**.
+
+### Phase 6 — Enrichissement _(mergée, PR #18)_
 
 - **Domaine + proxy** : `AirQualityStep.subIndices` (sous-indices EPA
   `co/no2/o3/so2/pm10/pm25`) — `normalizeAirQuality` mappe les `AQI_*` de la

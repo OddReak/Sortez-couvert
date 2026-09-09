@@ -21,8 +21,10 @@ touche jamais le navigateur).
 | 2     | Squelette UI (layout 15/60/25, thèmes)        | ✅ terminée |
 | 3     | Globe 3D                                      | ✅ terminée |
 | 4     | Bague temporelle                              | ✅ terminée |
-| 5     | Lieux (géoloc, recherche, favoris)            | 🚧 en cours |
-| 6–9   | Enrichissement, PWA/offline, a11y/perf, prod  | à venir     |
+| 5     | Lieux (géoloc, recherche, favoris)            | ✅ terminée |
+| 6     | Enrichissement (détails, prévisions, alertes) | ✅ terminée |
+| 7     | PWA & hors ligne                              | ✅ terminée |
+| 8–9   | A11y/perf, prod                               | à venir     |
 
 Plan détaillé : `docs/PROMPT-MAITRE.md` §16.
 
@@ -42,17 +44,19 @@ En développement, toutes les données météo passent par des mocks **MSW**
 
 ### Scripts
 
-| Commande             | Rôle                                                |
-| -------------------- | --------------------------------------------------- |
-| `pnpm dev`           | Serveur de dev Vite                                 |
-| `pnpm build`         | Typecheck + build de production (`dist/`)           |
-| `pnpm preview`       | Sert le build (`http://localhost:4173`)             |
-| `pnpm typecheck`     | `tsc --noEmit` (app + node)                         |
-| `pnpm lint`          | ESLint (flat config)                                |
-| `pnpm format`        | Prettier (écriture)                                 |
-| `pnpm test`          | Vitest (unitaires)                                  |
-| `pnpm test:coverage` | Vitest + couverture (seuil `src/shared/lib` ≥ 85 %) |
-| `pnpm test:e2e`      | Playwright (émulation iPhone 15)                    |
+| Commande                   | Rôle                                                        |
+| -------------------------- | ----------------------------------------------------------- |
+| `pnpm dev`                 | Serveur de dev Vite                                         |
+| `pnpm build`               | Typecheck + build de production (`dist/`)                   |
+| `pnpm preview`             | Sert le build (`http://localhost:4173`)                     |
+| `pnpm typecheck`           | `tsc --noEmit` (app + node)                                 |
+| `pnpm lint`                | ESLint (flat config)                                        |
+| `pnpm format`              | Prettier (écriture)                                         |
+| `pnpm test`                | Vitest (unitaires)                                          |
+| `pnpm test:coverage`       | Vitest + couverture (seuil `src/shared/lib` ≥ 85 %)         |
+| `pnpm test:e2e`            | Playwright (iPhone 15 ; le hors ligne sur Chromium)         |
+| `pnpm preview:real`        | Sert le build réel avec le service worker PWA (`:4174`)     |
+| `pnpm generate:pwa-assets` | Régénère icônes + splash iOS depuis `public/pwa-source.svg` |
 
 ---
 
@@ -73,6 +77,21 @@ défauts d'implémentation :
 - **Géolocalisation en arrière-plan :** impossible.
 - **Stockage :** IndexedDB est traité comme un **cache**, pas un stockage
   durable — les données peuvent être purgées après ~7 jours sans usage.
+
+---
+
+## Installer Terra / hors ligne
+
+- **Android / desktop Chromium :** un bouton « Installer Terra » apparaît dans
+  les réglages quand le navigateur le propose.
+- **iPhone (Safari) :** menu Partager → « Ajouter à l'écran d'accueil ». Une
+  fois installée, l'app dispose d'un écran de lancement dédié.
+- **Sans réseau :** l'app reste utilisable. Le dernier relevé de chaque lieu
+  (météo, prévisions, qualité de l'air) est servi depuis le cache, avec un
+  bandeau « Données du … ». Le service worker précache la coquille de l'app
+  (HTML/CSS/JS, polices) ; le globe 3D et ses textures se mettent en cache à la
+  première visite. Une nouvelle version déclenche un toast « Recharger » —
+  jamais de rechargement forcé.
 
 ---
 

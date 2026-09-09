@@ -1,4 +1,5 @@
 import { LocationGate } from '@/features/location/LocationGate';
+import { UpdatePrompt } from '@/pwa/UpdatePrompt';
 
 import { AppProviders } from './providers';
 import { HomeScreen } from './screens/HomeScreen';
@@ -9,6 +10,7 @@ export function App() {
       <LocationGate>
         <HomeScreen />
       </LocationGate>
+      <UpdatePrompt />
     </AppProviders>
   );
 }

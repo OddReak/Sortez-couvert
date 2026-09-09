@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./dist",
+      "staticDistDir": "./dist-mock",
       "numberOfRuns": 3
     },
     "assert": {

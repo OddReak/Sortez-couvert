@@ -5,7 +5,27 @@ import { interpolateValue, nearestStep } from '@/shared/lib/interpolate';
 import { resolveTheme, type ThemePaint } from '@/shared/lib/theme';
 import type { Place, TimeStep, WeatherSnapshot } from '@/shared/types/domain';
 
-import { fetchWeather } from './api';
+import { fetchWeather, type WeatherQueryInput } from './api';
+import { loadSnapshot, saveSnapshot } from './snapshotCache';
+
+/**
+ * Récupère la météo ; en cas d'échec réseau, retombe sur le dernier snapshot
+ * mis en cache pour ce lieu (brief §9.11). Un succès rafraîchit le cache.
+ */
+export async function resolveWeather(
+  placeId: string,
+  input: WeatherQueryInput,
+): Promise<WeatherSnapshot> {
+  try {
+    const snapshot = await fetchWeather(input);
+    void saveSnapshot(placeId, snapshot);
+    return snapshot;
+  } catch (error) {
+    const cached = await loadSnapshot(placeId);
+    if (cached) return cached.snapshot;
+    throw error;
+  }
+}
 
 export function useWeatherSnapshot(place: Place) {
   const language = useSettings((s) => s.language);
@@ -14,12 +34,13 @@ export function useWeatherSnapshot(place: Place) {
   return useQuery({
     queryKey: ['weather', place.id, language, units.temp, units.wind] as const,
     queryFn: () =>
-      fetchWeather({
+      resolveWeather(place.id, {
         lat: place.lat,
         lon: place.lon,
         lang: language,
         units,
       }),
+    networkMode: 'offlineFirst',
   });
 }
 

@@ -70,8 +70,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Installer WebKit
-        run: pnpm exec playwright install --with-deps webkit
+      - name: Installer WebKit + Chromium
+        run: pnpm exec playwright install --with-deps webkit chromium
       - run: pnpm test:e2e
       - if: always()
         uses: actions/upload-artifact@v4

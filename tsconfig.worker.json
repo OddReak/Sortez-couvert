@@ -1,35 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "WebWorker"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "useDefineForClassFields": true,
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
 
-    /* Rigueur — imposée par le brief §2 */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
+    // Les classes de plugins Workbox déclarent leurs méthodes optionnelles
+    // sans `| undefined` — incompatible avec exactOptionalPropertyTypes.
+    "exactOptionalPropertyTypes": false,
     "forceConsistentCasingInFileNames": true,
 
-    "types": ["vite/client", "vite-plugin-pwa/client"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "types": ["vite/client", "vite-plugin-pwa/info"]
   },
-  "include": ["src", "tests/unit", "tests/setup.ts", "vite-env.d.ts"],
-  "exclude": ["src/pwa/sw.ts"]
+  "include": ["src/pwa/sw.ts"]
 }

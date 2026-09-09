@@ -6,6 +6,7 @@ import './shared/styles/theme.css';
 
 import { App } from './app/App';
 import { startMockServiceWorker } from './mocks/start';
+import { registerServiceWorker } from './pwa/register';
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {
@@ -20,4 +21,7 @@ void startMockServiceWorker().then(() => {
       <App />
     </StrictMode>,
   );
+  // Après le premier render : n'entre jamais en concurrence avec MSW (no-op en
+  // dev / build mock).
+  void registerServiceWorker();
 });

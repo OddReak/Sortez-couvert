@@ -18,13 +18,34 @@ export default defineConfig({
       // Cible de test d'Audric : iPhone 15, dernier iOS stable (brief §17.23).
       name: 'iphone-15',
       use: { ...devices['iPhone 15'] },
+      testIgnore: /offline\.spec\.ts/,
+    },
+    {
+      // Le mode hors ligne teste le service worker + `context.setOffline` +
+      // reload : WebKit plante sur cette combinaison dans Playwright. Le
+      // comportement testé (cache SW / repli IndexedDB) est indépendant du
+      // moteur → on le vérifie sur Chromium.
+      name: 'offline-chromium',
+      use: { ...devices['Pixel 7'] },
+      testMatch: /offline\.spec\.ts/,
     },
   ],
-  webServer: {
-    // Build de production + fixtures MSW (VITE_ENABLE_MOCKS via .env.mock).
-    command: 'pnpm preview:mock',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !isCI,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      // Build + fixtures MSW (VITE_ENABLE_MOCKS via .env.mock) — la majorité
+      // des specs. baseURL par défaut.
+      command: 'pnpm preview:mock',
+      url: 'http://localhost:4173',
+      reuseExistingServer: !isCI,
+      timeout: 180_000,
+    },
+    {
+      // Build RÉEL (service worker PWA actif, pas de MSW) — `offline.spec.ts`
+      // s'y branche via `test.use({ baseURL })`.
+      command: 'pnpm preview:real',
+      url: 'http://localhost:4174',
+      reuseExistingServer: !isCI,
+      timeout: 180_000,
+    },
+  ],
 });
