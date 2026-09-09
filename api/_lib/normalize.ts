@@ -3,7 +3,7 @@
  *
  * Le front ne voit JAMAIS la forme Foreca : tout passe par ici (brief §4.3).
  */
-import { normalizePlaceId } from '../../src/shared/lib/geo';
+import { normalizePlaceId } from '../../src/shared/lib/geo.js';
 import type {
   AirQualityStep,
   AqiPollutant,
@@ -13,14 +13,14 @@ import type {
   PrecipType,
   TimeStep,
   WeatherSnapshot,
-} from '../../src/shared/types/domain';
+} from '../../src/shared/types/domain.js';
 import type {
   ForecaAirQualityStep,
   ForecaCurrent,
   ForecaDailyStep,
   ForecaHourlyStep,
   ForecaLocation,
-} from './schemas';
+} from './schemas.js';
 
 function epochFromIso(iso: string): number {
   const ms = Date.parse(iso);

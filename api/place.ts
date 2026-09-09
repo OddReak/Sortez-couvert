@@ -2,10 +2,10 @@
  * GET /api/place?lat&lon&lang — coordonnées → lieu (nom, pays, fuseau).
  * Sert la géolocalisation : le device donne lat/lon, on remonte le `Place`.
  */
-import { cacheControl } from './_lib/cache';
-import { json, withApi } from './_lib/http';
-import { parsePlaceQuery } from './_lib/params';
-import { resolvePlace } from './_lib/place-service';
+import { cacheControl } from './_lib/cache.js';
+import { json, withApi } from './_lib/http.js';
+import { parsePlaceQuery } from './_lib/params.js';
+import { resolvePlace } from './_lib/place-service.js';
 
 export const config = { runtime: 'nodejs' } as const;
 

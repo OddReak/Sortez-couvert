@@ -4,7 +4,7 @@
  * Fenêtre fixe d'une minute. Sur repli mémoire, la limite est par instance
  * serverless (dégradé mais acceptable) ; avec Upstash, elle est globale.
  */
-import { getKvStore } from './kv';
+import { getKvStore } from './kv.js';
 
 const WINDOW_SECONDS = 60;
 const MAX_REQUESTS = 60;

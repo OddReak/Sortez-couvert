@@ -3,10 +3,10 @@
  *
  * Route d'agrégation unique du front (brief §4.3). Renvoie un `WeatherSnapshot`.
  */
-import { cacheControl } from './_lib/cache';
-import { json, withApi } from './_lib/http';
-import { parseWeatherQuery } from './_lib/params';
-import { getWeatherSnapshot } from './_lib/weather-service';
+import { cacheControl } from './_lib/cache.js';
+import { json, withApi } from './_lib/http.js';
+import { parseWeatherQuery } from './_lib/params.js';
+import { getWeatherSnapshot } from './_lib/weather-service.js';
 
 export const config = { runtime: 'nodejs' } as const;
 
