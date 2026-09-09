@@ -6,6 +6,12 @@ allowBuilds:
   msw: false
   sharp: true
 
+# `@vite-pwa/assets-generator` épingle sharp 0.33 (libheif — GHSA high, mais
+# build-only, image de source maîtrisée). On force une version corrigée.
+overrides:
+  sharp: '>=0.35.4'
+  '@img/sharp-libvips-linux-x64': '>=1.2.3'
+
 minimumReleaseAgeExclude:
   - '@typescript-eslint/eslint-plugin@8.70.0'
   - '@typescript-eslint/parser@8.70.0'
