@@ -1,27 +1,6 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-async function expectNoBlockingA11y(page: Page) {
-  // Laisser l'animation d'ouverture des sheets se terminer : sinon axe mesure
-  // le contraste sur un panneau encore semi-transparent.
-  await page.evaluate(() => {
-    for (const a of document.getAnimations()) {
-      try {
-        a.finish();
-      } catch {
-        // animation infinie (ex. pulse) — sans effet sur l'opacité des sheets
-      }
-    }
-  });
-  await page.waitForTimeout(50);
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  const blocking = results.violations.filter(
-    (v) => v.impact === 'critical' || v.impact === 'serious',
-  );
-  expect(blocking).toEqual([]);
-}
+import { expectNoA11yViolations } from './_helpers';
 
 test('tap sur une métrique → bottom sheet de détail avec graphe 24 h', async ({
   page,
@@ -38,7 +17,7 @@ test('tap sur une métrique → bottom sheet de détail avec graphe 24 h', async
   ).toBeVisible();
   await expect(sheet.getByText(/min .* · max /)).toBeVisible();
 
-  await expectNoBlockingA11y(page);
+  await expectNoA11yViolations(page);
 
   await sheet.getByRole('button', { name: 'Fermer' }).click();
   await expect(sheet).toBeHidden();
@@ -70,7 +49,7 @@ test('prévisions 7 jours accessibles depuis le menu', async ({ page }) => {
   await expect(sheet.getByText("Aujourd'hui")).toBeVisible();
   await expect(sheet.getByRole('listitem')).toHaveCount(7);
 
-  await expectNoBlockingA11y(page);
+  await expectNoA11yViolations(page);
 });
 
 test('bandeau d’alerte avec ?alerts=1, absent sinon', async ({ page }) => {
@@ -85,7 +64,7 @@ test('bandeau d’alerte avec ?alerts=1, absent sinon', async ({ page }) => {
   await expect(sheet).toBeVisible();
   await expect(sheet.getByText('Vigilance orange')).toBeVisible();
 
-  await expectNoBlockingA11y(page);
+  await expectNoA11yViolations(page);
 
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();

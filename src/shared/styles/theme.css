@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './fonts.css';
 
 /* ==========================================================================
    TERRA — Design tokens (source unique)
@@ -86,12 +87,26 @@
   --app-ink-faint: #6b7583; /* 3.6:1 sur #f8f9fa */
   --app-live: #1e3a8a; /* pastille « En direct » — 8:1 sur #f8f9fa */
   --app-hairline: color-mix(in srgb, var(--app-ink) 14%, transparent);
+  --app-focus: #1e3a8a; /* anneau de focus — 8:1 sur #f8f9fa (§11) */
 }
 :root[data-scheme='dark'] {
   --app-ink-muted: #aab3c0; /* 7:1 sur #0b0f19 */
   --app-ink-faint: #8a94a3; /* 4.4:1 sur #0b0f19 */
   --app-live: #bfdbfe; /* 12:1 sur #0b0f19 */
   --app-hairline: color-mix(in srgb, var(--app-ink) 20%, transparent);
+  --app-focus: #bfdbfe; /* 12:1 sur #0b0f19 */
+}
+
+/* Contraste renforcé (brief §11) : encres à pleine encre, filets marqués.
+   Le forçage de la surface unie en aube/crépuscule est géré par `resolveTheme`. */
+@media (prefers-contrast: more) {
+  :root,
+  :root[data-scheme='light'],
+  :root[data-scheme='dark'] {
+    --app-ink-muted: var(--app-ink);
+    --app-ink-faint: var(--app-ink);
+    --app-hairline: color-mix(in srgb, var(--app-ink) 55%, transparent);
+  }
 }
 
 @layer base {
@@ -122,6 +137,17 @@
     background: none;
     border: 0;
     cursor: pointer;
+  }
+
+  /* Focus visible sur tout contrôle — anneau 2 px contrasté (brief §11).
+     `:focus:not(:focus-visible)` neutralise le halo au clic souris. */
+  :focus-visible {
+    outline: 2px solid var(--app-focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 
   /* Chiffres qui changent : tabular-nums pour ne pas trembler au scrub (§5.3). */

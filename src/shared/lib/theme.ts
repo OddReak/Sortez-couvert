@@ -65,27 +65,38 @@ export type ResolveThemeInput = {
   /** Lever/coucher du jour concerné (secondes epoch), ou null si inconnu. */
   sunriseSeconds: number | null;
   sunsetSeconds: number | null;
+  /**
+   * `prefers-contrast: more` (brief §11) : la surface de texte passe en pleine
+   * couleur (nuit/jour purs), sans demi-teinte aube/crépuscule.
+   */
+  highContrast?: boolean;
 };
 
 /**
  * Repli quand on n'a pas les éphémérides : heuristique par heure locale.
  * `hourOfDay` ∈ [0, 24).
  */
-function resolveByHour(hourOfDay: number): ThemePaint {
-  if (hourOfDay < 5 || hourOfDay >= 21) return paint(0, 'night');
-  if (hourOfDay >= 8 && hourOfDay < 18) return paint(1, 'day');
-  if (hourOfDay < 8) return paint(smoothstep(5, 8, hourOfDay), 'dawn');
-  return paint(smoothstep(21, 18, hourOfDay), 'dusk');
+function resolveByHour(hourOfDay: number, highContrast = false): ThemePaint {
+  if (hourOfDay < 5 || hourOfDay >= 21) return paint(0, 'night', highContrast);
+  if (hourOfDay >= 8 && hourOfDay < 18) return paint(1, 'day', highContrast);
+  if (hourOfDay < 8)
+    return paint(smoothstep(5, 8, hourOfDay), 'dawn', highContrast);
+  return paint(smoothstep(21, 18, hourOfDay), 'dusk', highContrast);
 }
 
 export function resolveTheme(input: ResolveThemeInput): ThemePaint {
-  const { atSeconds, sunriseSeconds, sunsetSeconds } = input;
+  const {
+    atSeconds,
+    sunriseSeconds,
+    sunsetSeconds,
+    highContrast = false,
+  } = input;
 
   if (sunriseSeconds === null || sunsetSeconds === null) {
     // Repli grossier sans éphémérides : heure UTC (le proxy fournit
     // normalement sunrise/sunsetEpoch, ce chemin est rare).
     const hour = (((atSeconds % 86_400) + 86_400) % 86_400) / 3600;
-    return resolveByHour(hour);
+    return resolveByHour(hour, highContrast);
   }
 
   const dawnStart = sunriseSeconds - TRANSITION_SECONDS;
@@ -94,18 +105,30 @@ export function resolveTheme(input: ResolveThemeInput): ThemePaint {
   const duskEnd = sunsetSeconds + TRANSITION_SECONDS;
 
   if (atSeconds >= dawnStart && atSeconds <= dawnEnd) {
-    return paint(smoothstep(dawnStart, dawnEnd, atSeconds), 'dawn');
+    return paint(
+      smoothstep(dawnStart, dawnEnd, atSeconds),
+      'dawn',
+      highContrast,
+    );
   }
   if (atSeconds >= duskStart && atSeconds <= duskEnd) {
-    return paint(smoothstep(duskEnd, duskStart, atSeconds), 'dusk');
+    return paint(
+      smoothstep(duskEnd, duskStart, atSeconds),
+      'dusk',
+      highContrast,
+    );
   }
   if (atSeconds > dawnEnd && atSeconds < duskStart) {
-    return paint(1, 'day');
+    return paint(1, 'day', highContrast);
   }
-  return paint(0, 'night');
+  return paint(0, 'night', highContrast);
 }
 
-function paint(daynessRaw: number, mode: ThemeMode): ThemePaint {
+function paint(
+  daynessRaw: number,
+  mode: ThemeMode,
+  highContrast = false,
+): ThemePaint {
   const dayness = clamp01(daynessRaw);
   const scheme: ColorScheme = dayness < 0.5 ? 'dark' : 'light';
 
@@ -127,14 +150,15 @@ function paint(daynessRaw: number, mode: ThemeMode): ThemePaint {
   }
 
   // Surface de texte : bascule franche au milieu de transition.
+  // En contraste renforcé : pleine couleur (pas de teinte aube/crépuscule).
   let surface: string;
   if (scheme === 'dark') {
     surface =
-      mode === 'dawn'
-        ? SURFACE_DAWN
-        : mode === 'dusk'
-          ? SURFACE_DUSK
-          : SURFACE_NIGHT;
+      highContrast || mode === 'night'
+        ? SURFACE_NIGHT
+        : mode === 'dawn'
+          ? SURFACE_DAWN
+          : SURFACE_DUSK;
   } else {
     surface = SURFACE_DAY;
   }

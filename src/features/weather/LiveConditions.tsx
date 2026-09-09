@@ -3,6 +3,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { isFollowingNow } from '@/features/time-ring/cursor';
 import { useCursorEpoch } from '@/features/time-ring/useCursor';
 import { nowSeconds } from '@/shared/lib/time';
+import { usePrefersContrast } from '@/shared/lib/useMediaQuery';
 import type { WeatherSnapshot } from '@/shared/types/domain';
 
 import { selectConditions, type DisplayedConditions } from './useWeather';
@@ -24,6 +25,7 @@ export function LiveConditionsProvider({
   children: ReactNode;
 }) {
   const cursorEpoch = useCursorEpoch();
+  const highContrast = usePrefersContrast();
 
   const conditions = useMemo(
     () =>
@@ -31,8 +33,9 @@ export function LiveConditionsProvider({
         snapshot,
         isFollowingNow() ? null : cursorEpoch,
         nowSeconds(),
+        highContrast,
       ),
-    [snapshot, cursorEpoch],
+    [snapshot, cursorEpoch, highContrast],
   );
 
   return <LiveCtx.Provider value={conditions}>{children}</LiveCtx.Provider>;

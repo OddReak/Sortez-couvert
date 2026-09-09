@@ -1,5 +1,6 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+
+import { expectNoA11yViolations } from './_helpers';
 
 test('le globe WebGL se charge après l’UI', async ({ page }) => {
   await page.goto('/');
@@ -28,13 +29,6 @@ test.describe('prefers-reduced-motion → fallback 2D (brief §7.5)', () => {
   }) => {
     await page.goto('/');
     await page.getByRole('heading', { name: 'Paris' }).waitFor();
-
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-      .analyze();
-    const blocking = results.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious',
-    );
-    expect(blocking).toEqual([]);
+    await expectNoA11yViolations(page);
   });
 });

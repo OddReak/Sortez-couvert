@@ -23,3 +23,6 @@ export function useMediaQuery(query: string): boolean {
 
 export const usePrefersReducedMotion = (): boolean =>
   useMediaQuery('(prefers-reduced-motion: reduce)');
+
+export const usePrefersContrast = (): boolean =>
+  useMediaQuery('(prefers-contrast: more)');

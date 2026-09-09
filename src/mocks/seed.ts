@@ -12,15 +12,22 @@ const PARIS: Place = {
 };
 
 /**
- * En mode mock (dev / e2e), on saute l'onboarding et on part sur Paris — sauf
- * `?onboarding=1` dans l'URL (pour tester le parcours de permission).
+ * En mode mock (dev / e2e), on saute l'onboarding et on part sur Paris — sauf :
+ *  - `?onboarding=1` : garde l'onboarding (parcours de permission) ;
+ *  - `?choose=1` : onboarding fait mais aucun lieu → écran « Choisir un lieu ».
  */
 export function seedMockPlace(): void {
-  if (
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).has('onboarding')
-  ) {
+  const params =
+    typeof window === 'undefined'
+      ? new URLSearchParams()
+      : new URLSearchParams(window.location.search);
+
+  if (params.has('onboarding')) {
     usePlaces.setState({ hydrated: true });
+    return;
+  }
+  if (params.has('choose')) {
+    usePlaces.setState({ onboardingDone: true, hydrated: true });
     return;
   }
   const s = usePlaces.getState();

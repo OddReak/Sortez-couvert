@@ -95,6 +95,25 @@ défauts d'implémentation :
 
 ---
 
+## Accessibilité
+
+Terra vise **WCAG 2.2 niveau AA**, vérifié automatiquement (`axe-core` sur
+chaque écran en CI, Lighthouse A11y ≥ 0.95 bloquant) :
+
+- **Focus visible** partout (anneau 2 px contrasté), cibles tactiles ≥ 44 pt.
+- **Contraste** ≥ 4.5:1 pour le texte, y compris pendant les transitions
+  aube/crépuscule ; `prefers-contrast: more` renforce encore filets et surfaces.
+- **`prefers-reduced-motion`** : globe → rendu 2D statique, bague → alternative
+  en chips d'heures, plus d'inertie ni de ressort.
+- **Dynamic Type / zoom 200 %** : mise en page en `rem`, défilement en secours.
+- **VoiceOver** : libellés en français sur chaque contrôle ; annonces `aria-live`
+  débouncées lors du scrub.
+- **Multi-appareils** : la mise en page s'adapte à la taille de l'écran (petit
+  téléphone, grand téléphone, tablette, desktop en colonne), pas seulement à
+  l'iPhone 15.
+
+---
+
 ## Documentation
 
 - `CLAUDE.md` — conventions, architecture, glossaire, commandes (tenu à jour à

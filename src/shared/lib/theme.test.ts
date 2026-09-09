@@ -85,4 +85,24 @@ describe('accessibilité — contraste ≥ 4.5:1 sur tout le cycle (brief §11)'
       );
     }
   });
+
+  it('contraste renforcé : surface pleine (pas de teinte aube/crépuscule)', () => {
+    for (const base of [SUNRISE, SUNSET]) {
+      for (let i = 0; i <= 19; i += 1) {
+        const at = base - 45 * 60 + (i / 19) * 90 * 60;
+        const paint = resolveTheme({
+          atSeconds: at,
+          ...day,
+          highContrast: true,
+        });
+        expect(
+          contrastRatio(paint.surface, paint.ink),
+          `high-contrast point ${String(i)}`,
+        ).toBeGreaterThanOrEqual(7);
+        if (paint.scheme === 'dark') {
+          expect(paint.surface.toLowerCase()).toBe('#0b0f19');
+        }
+      }
+    }
+  });
 });

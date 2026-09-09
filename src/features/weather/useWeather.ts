@@ -18,7 +18,8 @@ export async function resolveWeather(
 ): Promise<WeatherSnapshot> {
   try {
     const snapshot = await fetchWeather(input);
-    void saveSnapshot(placeId, snapshot);
+    // Attendre l'écriture : garantit que le repli hors ligne est disponible.
+    await saveSnapshot(placeId, snapshot);
     return snapshot;
   } catch (error) {
     const cached = await loadSnapshot(placeId);
@@ -68,6 +69,7 @@ export function selectConditions(
   snapshot: WeatherSnapshot,
   selectedEpoch: number | null,
   now: number,
+  highContrast = false,
 ): DisplayedConditions {
   // `null` = « suit maintenant » → on utilise l'instant réel + les mesures
   // observées (`snapshot.current`), pas un pas interpolé.
@@ -81,6 +83,7 @@ export function selectConditions(
         atSeconds: now,
         sunriseSeconds: today?.sunriseEpoch ?? null,
         sunsetSeconds: today?.sunsetEpoch ?? null,
+        highContrast,
       }),
     };
   }
@@ -117,6 +120,7 @@ export function selectConditions(
     atSeconds: atEpoch,
     sunriseSeconds: today?.sunriseEpoch ?? null,
     sunsetSeconds: today?.sunsetEpoch ?? null,
+    highContrast,
   });
 
   return { atEpoch, isNow, step, theme };
