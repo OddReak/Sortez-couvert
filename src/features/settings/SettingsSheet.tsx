@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 
+import { Link } from '@/app/router';
 import { usePlaces } from '@/features/location/placesStore';
 import { useInstallPrompt } from '@/pwa/useInstallPrompt';
 import { Sheet } from '@/shared/ui/Sheet';
@@ -165,6 +166,23 @@ export function SettingsSheet({
       >
         Effacer mes lieux et repartir de zéro
       </button>
+
+      <div className="mt-4 flex gap-4 text-sm">
+        <Link
+          to="/aide"
+          onNavigate={onClose}
+          className="font-semibold underline"
+        >
+          Aide
+        </Link>
+        <Link
+          to="/confidentialite"
+          onNavigate={onClose}
+          className="font-semibold underline"
+        >
+          Confidentialité
+        </Link>
+      </div>
 
       <details className="mt-3 text-[0.6875rem]">
         <summary className="ink-muted cursor-pointer">À propos</summary>

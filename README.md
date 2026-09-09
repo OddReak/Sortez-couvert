@@ -24,9 +24,10 @@ touche jamais le navigateur).
 | 5     | Lieux (géoloc, recherche, favoris)            | ✅ terminée |
 | 6     | Enrichissement (détails, prévisions, alertes) | ✅ terminée |
 | 7     | PWA & hors ligne                              | ✅ terminée |
-| 8–9   | A11y/perf, prod                               | à venir     |
+| 8     | Accessibilité & performance                   | ✅ terminée |
+| 9     | Production (Vercel, pages légales, doc)       | ✅ terminée |
 
-Plan détaillé : `docs/PROMPT-MAITRE.md` §16.
+Plan détaillé : `docs/PROMPT-MAITRE.md` §16. Déploiement : `docs/DEPLOIEMENT.md`.
 
 ---
 
@@ -114,11 +115,21 @@ chaque écran en CI, Lighthouse A11y ≥ 0.95 bloquant) :
 
 ---
 
+## Déploiement
+
+Cible **Vercel** (`terra-weather.vercel.app`, fonctions région `cdg1`), cache et
+rate-limit sur **Upstash Redis**. Procédure complète, variables d'environnement
+et checklist post-déploiement : **`docs/DEPLOIEMENT.md`**.
+
+Pages publiques : `/aide` (prise en main, installation) et `/confidentialite`
+(RGPD).
+
 ## Documentation
 
 - `CLAUDE.md` — conventions, architecture, glossaire, commandes (tenu à jour à
   chaque phase).
 - `docs/PROMPT-MAITRE.md` — cahier des charges complet.
+- `docs/DEPLOIEMENT.md` — mise en production Vercel.
 - `docs/Brief_UI_UX_Meteo_Terre.pdf` + `docs/mockup-board-ui-ux.jpg` — design.
 
 ## Attribution
