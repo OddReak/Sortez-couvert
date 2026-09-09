@@ -7,9 +7,25 @@ import hourly from './fixtures/forecast-hourly.json';
 import locationMeta from './fixtures/location-meta.json';
 import locationSearch from './fixtures/location-search.json';
 import warning403 from './fixtures/warning-403.json';
+import warnings from './fixtures/warnings.json';
 import weatherSnapshot from './fixtures/weather-snapshot.json';
 import { rebaseSnapshot } from './rebase';
-import type { WeatherSnapshot } from '@/shared/types/domain';
+import type { Warning, WeatherSnapshot } from '@/shared/types/domain';
+
+/**
+ * `?alerts=1` dans l'URL de la page injecte des alertes fictives dans la
+ * réponse `/api/weather` (l'endpoint `warning` Foreca est 403 sur le plan
+ * d'Audric — même esprit que `?onboarding=1`).
+ */
+function mockWarnings(): Warning[] {
+  if (
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('alerts')
+  ) {
+    return warnings as Warning[];
+  }
+  return [];
+}
 
 /**
  * Mock de Foreca (niveau serveur) à partir des fixtures dérivées de la sonde
@@ -39,7 +55,10 @@ export const forecaHandlers: RequestHandler[] = [
  */
 export const apiHandlers: RequestHandler[] = [
   http.get('*/api/weather', () =>
-    HttpResponse.json(rebaseSnapshot(weatherSnapshot as WeatherSnapshot)),
+    HttpResponse.json({
+      ...rebaseSnapshot(weatherSnapshot as WeatherSnapshot),
+      warnings: mockWarnings(),
+    }),
   ),
   http.get('*/api/place', ({ request }) => {
     const url = new URL(request.url);

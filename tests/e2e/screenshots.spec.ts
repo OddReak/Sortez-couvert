@@ -62,6 +62,43 @@ test('capture — onboarding pré-permission', async ({ page }) => {
   await page.screenshot({ path: test.info().outputPath('onboarding.png') });
 });
 
+test('capture — détail métrique (graphe 24 h)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'Paris' }).waitFor();
+  await page.getByRole('button', { name: /Détail : Vent/ }).click();
+  await page.getByRole('dialog', { name: 'Vent' }).waitFor();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('metric-sheet.png') });
+});
+
+test('capture — qualité de l’air détaillée', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'Paris' }).waitFor();
+  await page.getByRole('button', { name: /Détail : Qualité de l'air/ }).click();
+  await page.getByRole('dialog', { name: "Qualité de l'air" }).waitFor();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('air-quality.png') });
+});
+
+test('capture — prévisions 7 jours', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'Paris' }).waitFor();
+  await page.getByRole('button', { name: 'Ouvrir le menu des lieux' }).click();
+  await page.getByRole('button', { name: 'Prévisions 7 jours' }).click();
+  await page.getByRole('dialog', { name: '7 jours' }).waitFor();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('forecast-7d.png') });
+});
+
+test('capture — bandeau et détail d’alerte', async ({ page }) => {
+  await page.goto('/?alerts=1');
+  await page.getByRole('heading', { name: 'Paris' }).waitFor();
+  await page.getByRole('button', { name: /Vent violent/ }).click();
+  await page.getByRole('dialog', { name: /Alertes? météo/ }).waitFor();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('alert-sheet.png') });
+});
+
 test('capture — recherche de ville', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Rechercher une ville' }).click();

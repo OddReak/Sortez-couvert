@@ -1,11 +1,14 @@
 import { Menu, Search } from 'lucide-react';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
+import { AlertBanner } from '@/features/alerts/AlertBanner';
 import { PlacesMenu } from '@/features/location/PlacesMenu';
 import { SearchSheet } from '@/features/location/SearchSheet';
 import { usePlaces } from '@/features/location/placesStore';
 import { useSwipePlaces } from '@/features/location/useSwipePlaces';
 import { MetricGrid } from '@/features/metrics/MetricGrid';
+import { MetricSheet } from '@/features/metrics/MetricSheet';
+import type { MetricKey } from '@/features/metrics/metricMeta';
 import { useSettings } from '@/features/settings/store';
 import { useApplyTheme } from '@/features/theme/useApplyTheme';
 import { followNow } from '@/features/time-ring/cursor';
@@ -93,6 +96,10 @@ function PlaceScreen({
             place={place}
             onOpenMenu={onOpenMenu}
             onOpenSearch={onOpenSearch}
+          />
+          <AlertBanner
+            warnings={query.data.warnings}
+            timezone={place.timezone}
           />
           <CenterStage place={place} snapshot={query.data} />
           <BottomPanel snapshot={query.data} />
@@ -243,6 +250,10 @@ function SelectedTimeLabel({ timezone }: { timezone: string }) {
 // ── BOTTOM · 25 % ─────────────────────────────────────────────────────────
 
 function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
+  const [metric, setMetric] = useState<MetricKey | null>(null);
+  const units = useSettings((s) => s.units);
+  const { atEpoch } = useLiveConditions();
+
   return (
     <footer
       className="safe-b flex shrink-0 flex-col gap-2 px-4 pb-2"
@@ -250,9 +261,19 @@ function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
     >
       <div className="flex items-end justify-between gap-4">
         <HeroTemperature />
-        <Metrics snapshot={snapshot} />
+        <Metrics snapshot={snapshot} onSelect={setMetric} />
       </div>
       <Attribution data={snapshot.attribution} />
+
+      <MetricSheet
+        metricKey={metric}
+        onClose={() => {
+          setMetric(null);
+        }}
+        snapshot={snapshot}
+        atEpoch={atEpoch}
+        units={units}
+      />
     </footer>
   );
 }
@@ -311,10 +332,23 @@ function SpringTemp({ value }: { value: number | null }) {
   return <span ref={ref}>{`${String(roundHalfUp(value))}°`}</span>;
 }
 
-function Metrics({ snapshot }: { snapshot: WeatherSnapshot }) {
+function Metrics({
+  snapshot,
+  onSelect,
+}: {
+  snapshot: WeatherSnapshot;
+  onSelect: (key: MetricKey) => void;
+}) {
   const { step } = useLiveConditions();
   const units = useSettings((s) => s.units);
-  return <MetricGrid step={step} units={units} snapshot={snapshot} />;
+  return (
+    <MetricGrid
+      step={step}
+      units={units}
+      snapshot={snapshot}
+      onSelect={onSelect}
+    />
+  );
 }
 
 // ── Chargement / erreur ───────────────────────────────────────────────────

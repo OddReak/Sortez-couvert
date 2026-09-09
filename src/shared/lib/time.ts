@@ -47,6 +47,13 @@ export function formatRelativeDay(
   return day.toFormat('cccc');
 }
 
+/** Epoch (s) du début de journée locale pour une date ISO « YYYY-MM-DD ». */
+export function startOfDayEpoch(dateIso: string, timezone: string): number {
+  return Math.floor(
+    DateTime.fromISO(dateIso, { zone: timezone }).startOf('day').toSeconds(),
+  );
+}
+
 /** Vrai si les deux instants tombent dans la même heure locale. */
 export function isSameLocalHour(
   aSeconds: number,

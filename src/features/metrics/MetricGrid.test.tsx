@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { TimeStep, Units, WeatherSnapshot } from '@/shared/types/domain';
 
@@ -52,5 +53,31 @@ describe('MetricGrid', () => {
     expect(rows.find((r) => r.key === 'humidity')?.value).toBe('—');
     expect(rows.find((r) => r.key === 'uv')?.value).toBe('—');
     expect(rows.find((r) => r.key === 'aqi')?.value).toBe('—');
+  });
+
+  it('sans onSelect : lignes non interactives (pas de bouton)', () => {
+    render(<MetricGrid step={step()} units={units} snapshot={snapshot(42)} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('avec onSelect : chaque ligne est un bouton nommé qui remonte sa clé', async () => {
+    const onSelect = vi.fn();
+    render(
+      <MetricGrid
+        step={step()}
+        units={units}
+        snapshot={snapshot(42)}
+        onSelect={onSelect}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /Détail : Vent/ }),
+    );
+    expect(onSelect).toHaveBeenCalledWith('wind');
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Détail : Qualité de l'air/ }),
+    );
+    expect(onSelect).toHaveBeenCalledWith('aqi');
   });
 });

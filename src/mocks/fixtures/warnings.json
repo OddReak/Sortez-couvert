@@ -1,0 +1,24 @@
+[
+  {
+    "id": "fr-idf-wind-2026-09-09",
+    "event": "Vent violent",
+    "headline": "Rafales de 90 à 110 km/h attendues en soirée",
+    "description": "Un passage venteux traverse l'Île-de-France entre 18 h et 23 h. Des rafales de 90 à 110 km/h sont attendues, localement plus fortes sur les zones dégagées. Risque de chutes de branches et d'objets non arrimés.",
+    "severity": "moderate",
+    "color": "orange",
+    "onset": "2026-09-09T18:00:00+02:00",
+    "expires": "2026-09-09T23:00:00+02:00",
+    "source": "Foreca"
+  },
+  {
+    "id": "fr-idf-thunderstorm-2026-09-09",
+    "event": "Orages",
+    "headline": "Orages isolés possibles en fin de nuit",
+    "description": "Quelques cellules orageuses peuvent se développer entre 3 h et 7 h, accompagnées de fortes averses et de rafales sous orage.",
+    "severity": "minor",
+    "color": "yellow",
+    "onset": "2026-09-10T03:00:00+02:00",
+    "expires": "2026-09-10T07:00:00+02:00",
+    "source": "Foreca"
+  }
+]

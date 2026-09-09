@@ -126,7 +126,7 @@ describe('normalizeDaily', () => {
 });
 
 describe('normalizeAirQuality', () => {
-  it('mappe AQI + polluant dominant', () => {
+  it('mappe AQI + polluant dominant, sous-indices nuls si absents', () => {
     expect(
       normalizeAirQuality({
         time: '2026-09-08T11:00+02:00',
@@ -134,6 +134,26 @@ describe('normalizeAirQuality', () => {
         pollutantPhrase: 'Ozone',
         AQI: 21,
       }),
-    ).toEqual({ time: '2026-09-08T11:00+02:00', aqi: 21, pollutant: 'Ozone' });
+    ).toEqual({
+      time: '2026-09-08T11:00+02:00',
+      aqi: 21,
+      pollutant: 'Ozone',
+      subIndices: null,
+    });
+  });
+
+  it('mappe les sous-indices EPA présents et ignore les absents', () => {
+    expect(
+      normalizeAirQuality({
+        time: '2026-09-08T11:00+02:00',
+        pollutant: 'O3',
+        pollutantPhrase: 'Ozone',
+        AQI: 26,
+        AQI_CO: 1,
+        AQI_O3: 24,
+        AQI_PM2P5: 26,
+        AQI_SO2: null,
+      }).subIndices,
+    ).toEqual({ co: 1, o3: 24, pm25: 26 });
   });
 });

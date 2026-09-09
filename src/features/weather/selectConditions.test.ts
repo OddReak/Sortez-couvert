@@ -62,7 +62,7 @@ function makeSnapshot(
         confidence: 'g',
       },
     ],
-    airQuality: [{ time: '', aqi: 22, pollutant: 'Ozone' }],
+    airQuality: [{ time: '', aqi: 22, pollutant: 'Ozone', subIndices: null }],
     warnings: [],
     attribution: { provider: 'Foreca', thirdParty: [] },
     ...overrides,

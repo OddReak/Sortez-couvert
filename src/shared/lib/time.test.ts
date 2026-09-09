@@ -5,6 +5,7 @@ import {
   formatDayTime,
   formatRelativeDay,
   isSameLocalHour,
+  startOfDayEpoch,
 } from './time';
 
 const PARIS_10H = Math.floor(Date.parse('2026-09-08T10:00:00+02:00') / 1000);
@@ -34,6 +35,24 @@ describe('formatRelativeDay', () => {
     expect(formatRelativeDay(PARIS_10H + 30 * 3600, TZ, now)).toBe('Demain');
     expect(formatRelativeDay(PARIS_10H + 72 * 3600, TZ, now, 'en')).toBe(
       'Friday',
+    );
+  });
+});
+
+describe('startOfDayEpoch', () => {
+  it('renvoie minuit local pour une date ISO, selon le fuseau', () => {
+    expect(startOfDayEpoch('2026-09-08', TZ)).toBe(
+      Math.floor(Date.parse('2026-09-08T00:00:00+02:00') / 1000),
+    );
+    expect(startOfDayEpoch('2026-09-08', NY)).toBe(
+      Math.floor(Date.parse('2026-09-08T00:00:00-04:00') / 1000),
+    );
+  });
+
+  it('se recale bien sur le jour nommé via formatRelativeDay', () => {
+    const now = Math.floor(Date.parse('2026-09-08T12:00:00+02:00') / 1000);
+    expect(formatRelativeDay(startOfDayEpoch('2026-09-09', TZ), TZ, now)).toBe(
+      'Demain',
     );
   });
 });

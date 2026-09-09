@@ -193,29 +193,35 @@ VAPID (si v2 push).
 
 ## 9. Journal des phases
 
-### État au 2026-09-08 (fin de session)
+### État au 2026-09-09 (fin de session)
 
-- **`main` : Phases 0 → 4 mergées.** Phase 5 en attente dans la **PR #17**
-  (`sync/phase-5` → `main`, rebasée, à merger en rebase).
-- Toutes les branches `feat/phase-N-*` sont sur `origin`. Les branches
-  `sync/phase-N` sont l'artefact du merge stacké : à ignorer une fois #17
-  mergée.
-- **Piège récurrent réglé pour la suite** : ne plus empiler les PRs de phase
-  sur des branches intermédiaires. Chaque nouvelle phase = brancher depuis
-  `origin/main` à jour, PR → `main` directement.
+- **`main` : Phases 0 → 5 mergées** (PR #16 + #17).
+- **Phase 6 terminée sur `feat/phase-6-enrichment`** — gate verte
+  (typecheck / lint / format / 244 tests unitaires / build / 27 e2e). Bundle
+  initial **115,7 ko gzip** (budget §12 < 180). PR à ouvrir → `main` direct.
+- **Piège récurrent réglé** : ne plus empiler les PRs de phase sur des branches
+  intermédiaires. Chaque nouvelle phase = brancher depuis `origin/main` à jour,
+  PR → `main` directement.
 - **PRs Dependabot ouvertes (#4–#10)** : #9 (TypeScript 6) est à **fermer**
   (casse `typescript-eslint`). Les autres sont sûres.
 - `gh pr merge` est bloqué pour Claude Code dans ce harness — c'est Audric
   qui merge (ou `! gh pr merge N --rebase`).
 
-### Pour reprendre (Phase 6 — Enrichissement)
+### À valider sur iPhone réel (pré-existant, pas Phase 6)
 
-Bottom sheets de détail au tap sur une métrique (graphe 24 h + min/max +
-explication), prévisions journalières 7–10 j (icône, min/max, pluie,
-confiance `g/y/o`), qualité de l'air détaillée (sous-indices EPA déjà dans
-`AQI_*` de la sonde — étendre `AirQualityStep`), alertes (état vide,
-endpoint 403), réglages avancés. La primitive `Sheet` existe déjà
-(`src/shared/ui/Sheet.tsx`). Le graphe 24 h : charte `dataviz` à charger.
+Sur le viewport iPhone 15 en preview, le `CenterStage` (globe + bague) déborde
+légèrement : « MAINTENANT » chevauche la sous-ligne, l'étiquette d'heure
+chevauche la 1ʳᵉ métrique. Le bandeau d'alerte accentue le tassement quand il
+est présent (`?alerts=1` ; jamais en prod, endpoint 403). À traiter en
+**Phase 8 (polish)** avec le dimensionnement globe/bague.
+
+### Pour reprendre (Phase 7 — PWA & hors ligne)
+
+`vite-plugin-pwa` (service worker custom), manifest complet (§10.1), précache
+de l'app shell, `WeatherSnapshot` par lieu en IndexedDB + bandeau « Données
+du … » (§9.11), toast de mise à jour du SW (§9.12), splash/icônes iOS
+(`scripts/generate-pwa-assets`). C'est Audric qui installe la PWA et teste
+offline / iOS.
 
 ### Phase 0 — Fondations _(mergée, PR #1)_
 
@@ -365,7 +371,46 @@ motion` ou via les réglages (brief §8.6).
 - **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
   axe). Bundle initial **104 ko gzip**.
 
-### Phase 5 — Lieux _(en cours — branche `feat/phase-5-places`, PR #16)_
+### Phase 6 — Enrichissement _(terminée — branche `feat/phase-6-enrichment`)_
+
+- **Domaine + proxy** : `AirQualityStep.subIndices` (sous-indices EPA
+  `co/no2/o3/so2/pm10/pm25`) — `normalizeAirQuality` mappe les `AQI_*` de la
+  sonde ; `null` si le plan ne les renvoie pas.
+- **Libs pures + tests** : `metricMeta.ts` (descripteur vent/humidité/UV +
+  échelle UV), `chartPath.ts` (géométrie SVG du graphe, ruptures sur `null`,
+  extrêmes, repère de survol), `aqi.ts` étendu (bandes EPA → couleur + conseil,
+  polluant dominant), `shared/lib/forecast.ts` (`confidenceMeta` g/y/o),
+  `alerts/alertMeta.ts` (`significance` → couleur/label/`aria-live`),
+  `time.ts#startOfDayEpoch`.
+- **Bottom sheet de détail** (§9.6) : `MetricGrid` → boutons ; tap ouvre
+  `MetricSheet` = valeur courante + `MetricChart` (SVG inline, aucune lib,
+  charte `dataviz` : série mono, tokens `@theme`, `<title>` + table de valeurs
+  repliable) + min/max 24 h + explication. Fenêtre −6 h → +18 h autour du
+  curseur. UV : échelle colorée. AQI : barres des sous-indices + polluant
+  dominant + conseil santé.
+- **Prévisions 7 jours** (§9.7) : `DailyForecastSheet` depuis `PlacesMenu`
+  (« Prévisions 7 jours »). Le proxy récupère 10 périodes, l'UI en montre 7
+  (décision Audric). Icône, jour (`formatRelativeDay`), pluie, barre min/max,
+  pastille de confiance + label a11y.
+- **Alertes** (§9.9) : `AlertBanner` (bandeau discret sous le `TopBar`, `null`
+  si `warnings` vide = cas prod) + `AlertSheet` (détail, couleur selon
+  `significance`, fenêtre `onset`→`expires`). Mock dev/e2e : `?alerts=1` injecte
+  `src/mocks/fixtures/warnings.json` (comme `?onboarding=1`). Prod inchangée :
+  endpoint `warning` jamais appelé.
+- **Réglages** : bloc dépliable « À propos » dans `SettingsSheet` (Foreca,
+  limites iOS).
+- **Mock** : `weather-snapshot.json` régénéré (hourly −24 h → +36 h, 10 jours,
+  sous-indices AQI). `rebaseSnapshot` recale aussi `daily[].date` (décalage en
+  jours entiers) sinon les libellés « Aujourd'hui / Demain » sont faux.
+- **Infra test** : `tests/setup.ts` ajoute un stub `matchMedia` + `cleanup()`
+  RTL (auto-cleanup absent car `globals: false`).
+- **Écart brief** : `motion` toujours pas installé — le `Sheet` anime en CSS,
+  le graphe est statique. Rien ne le justifiait.
+- **244 tests** unitaires + **27 e2e** (tap métrique → sheet + graphe + axe ;
+  sous-indices AQI ; prévisions depuis le menu + axe ; `?alerts=1` bandeau +
+  sheet + axe). Bundle **115,7 ko gzip**.
+
+### Phase 5 — Lieux _(mergée, PR #16 + #17)_
 
 - **`GET /api/place?lat&lon`** — coordonnées → `Place` (Foreca `location`, cache
   30 j). `resolvePlace()` factorisé, réutilisé par l'agrégateur météo.
