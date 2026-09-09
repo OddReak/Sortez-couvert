@@ -1,3 +1,5 @@
+import { Analytics } from '@vercel/analytics/react';
+
 import { LocationGate } from '@/features/location/LocationGate';
 import { UpdatePrompt } from '@/pwa/UpdatePrompt';
 
@@ -11,6 +13,7 @@ export function App() {
         <HomeScreen />
       </LocationGate>
       <UpdatePrompt />
+      <Analytics />
     </AppProviders>
   );
 }
