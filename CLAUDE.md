@@ -66,12 +66,13 @@ Installées à leur phase : `zod` (1), `three`/`@react-three/fiber` (3),
 api/            Vercel Functions — proxy Foreca (la clé reste serveur)
   health.ts     GET /api/health (sonde, sans secret)
   _lib/         (Phase 1) client HTTP, cache, ratelimit, schemas zod
-docs/           Brief maître + brief design + mockup
+docs/           Brief maître + brief design + mockup + DEPLOIEMENT.md
 public/         textures/ + favicon.svg + pwa-source.svg (source icônes/splash)
                 icônes PWA + splash iOS : générés au build (non commités)
-scripts/        (Phase 1+) fetch-textures, probe-foreca
+scripts/        fetch-textures, probe-foreca, check-bundle-budget
 src/
-  app/          bootstrap, providers, router
+  app/          bootstrap, providers, mini-routeur (router.tsx), screens/
+                (HomeScreen · PrivacyPage /confidentialite · HelpPage /aide)
   features/
     globe/      Canvas R3F, shaders, caméra (Phase 3)
     time-ring/  bague, gestes, snapping, a11y (Phase 4)
@@ -188,12 +189,15 @@ Ces points sont documentés dans le README, section « Limites connues sur iOS �
 
 ## 8. Ce qu'Audric fait lui-même (rappeler au bon moment, jamais en bloc)
 
-Compte Foreca + clé (My API) · exécuter `scripts/probe-foreca.mjs` et renvoyer
-la sortie · fournir les icônes Foreca si son plan y donne droit · créer le
-projet Vercel + région `cdg1` · ajouter `FORECA_API_KEY` aux 3 environnements
-Vercel · valider chaque phase sur iPhone réel · installer la PWA + tester
-offline · tester avec VoiceOver · surveiller le quota Foreca · générer les clés
-VAPID (si v2 push).
+**Fait** : compte + clé Foreca ✓ · sonde ✓ · projet Vercel perso lié au repo ✓ ·
+`FORECA_API_KEY` sur Vercel ✓ · Analytics + Speed Insights ✓ · domaine
+`terra-weather.vercel.app` ✓.
+
+**Reste** (détaillé dans `docs/DEPLOIEMENT.md`) : base **Upstash Redis** +
+`UPSTASH_REDIS_REST_URL/TOKEN` sur les 3 environnements ; **protection par mot de
+passe des déploiements Preview** ; premier déploiement + checklist post-deploy ;
+tests iPhone réel (install PWA, offline, **VoiceOver**) ; surveiller le quota
+Foreca (2 000 req/j) ; clés VAPID (si v2 push).
 
 ---
 
@@ -201,26 +205,24 @@ VAPID (si v2 push).
 
 ### État au 2026-09-09 (fin de session)
 
-- **`main` : Phases 0 → 7 mergées** (Phase 7 = PR #19).
-- **Phase 8 terminée sur `feat/phase-8-a11y-perf`** — gate verte (typecheck /
-  lint / format / 263 tests unitaires / build / e2e). Bundle initial
-  **~113 ko gzip** ; précache SW ≈ **444 ko** (−167 ko : polices latin only).
-  Lighthouse local : perf **0.97–0.99**, a11y **1.0**, best-practices **1.0**.
-- **Piège récurrent réglé** : ne plus empiler les PRs de phase sur des branches
-  intermédiaires. Chaque nouvelle phase = brancher depuis `origin/main` à jour,
+- **`main` : Phases 0 → 8 mergées.** Dependabot #4–#8, #10 mergées ; #9 (TS 6)
+  fermée. Analytics/Speed Insights Vercel installés (PRs auto #21/#22).
+- **Phase 9 terminée sur `feat/phase-9-production`** (PR à ouvrir) — gate verte
+  (typecheck / lint / format / 271 tests unitaires / build / e2e / Lighthouse
+  ≥ 0.95). Bundle initial **~113 ko gzip**.
+- **Il reste à Audric** (voir `docs/DEPLOIEMENT.md`) : créer la base Upstash
+  Redis + renseigner `UPSTASH_REDIS_REST_*` × 3 env Vercel ; activer la
+  protection par mot de passe des Preview ; premier déploiement + checklist ;
+  tests sur iPhone réel (install, offline, **VoiceOver**).
+- **Piège récurrent réglé** : brancher chaque phase depuis `origin/main` à jour,
   PR → `main` directement.
-- **PRs Dependabot ouvertes (#4–#10)** : #9 (TypeScript 6) est à **fermer**
-  (casse `typescript-eslint`). Les autres sont sûres.
-- `gh pr merge` est bloqué pour Claude Code dans ce harness — c'est Audric
-  qui merge (ou `! gh pr merge N --rebase`).
+- `gh pr merge` est bloqué pour Claude Code — c'est Audric qui merge.
 
-### Pour reprendre (Phase 9 — Production)
+### v2 (sur accord explicite)
 
-Projet Vercel + région `cdg1`, `FORECA_API_KEY` sur les 3 environnements,
-domaine, monitoring (Sentry ? Vercel Analytics ?), **page Confidentialité**
-(§14 RGPD) + **page d'aide / installation** en français (§25 — partage avec des
-proches), README « doc de déploiement en français ». Checkpoint : mise en ligne.
-Écarts / limitations connues à documenter dans le README de déploiement.
+Notifications push d'alertes (VAPID + cron Vercel + Web Push), nowcast pluie
+minute par minute (`forecast/minutely`), carte radar, widgets. Rien à commencer
+sans le feu vert d'Audric.
 
 ### Phase 0 — Fondations _(mergée, PR #1)_
 
@@ -370,7 +372,33 @@ motion` ou via les réglages (brief §8.6).
 - **207 tests** unitaires + e2e (bague au geste + clavier, chips, scrub stable,
   axe). Bundle initial **104 ko gzip**.
 
-### Phase 8 — A11y & perf _(terminée — branche `feat/phase-8-a11y-perf`)_
+### Phase 9 — Production _(terminée — branche `feat/phase-9-production`)_
+
+- **Mini-routeur maison** `src/app/router.tsx` (`useRoute` / `navigate` / `Link`,
+  ~60 lignes, aucune dépendance) — l'app reste mono-écran, seules `/aide` et
+  `/confidentialite` ont une vraie URL (le rewrite SPA de `vercel.json` sert
+  déjà tout). `App.tsx` : `<Routes>` switch sur `pathname`.
+- **`PrivacyPage` (`/confidentialite`)** — RGPD : responsable, données transmises
+  à Foreca (jamais journalisées), stockage local + bouton d'effacement,
+  Analytics sans cookie, base légale, durées, hébergement UE, contact = issue
+  GitHub. **`HelpPage` (`/aide`)** — installation iOS/Android, prise en main,
+  hors ligne, limites iOS. Coquille commune `StaticPage` + `Section`.
+- Liens : `SettingsSheet` (Aide / Confidentialité), `Attribution` du pied
+  (« · Confidentialité », toujours visible).
+- **`<Analytics/>` / `<SpeedInsights/>`** (câblés par les PRs auto #21/#22)
+  rendus **uniquement en build réel** (`import.meta.env.PROD && !VITE_ENABLE_MOCKS`)
+  — pas de bruit réseau/404 en e2e / Lighthouse. En prod ils passent par
+  `/_vercel/*` (même origine) → CSP stricte inchangée.
+- **`vercel.json`** : `X-Frame-Options: DENY`, `Cache-Control immutable` sur
+  `/assets/*`. **`.env.example`** : Upstash documenté (obligatoire en prod).
+  **`api/health.ts`** : ajoute `region` / `commit` / `redis` (sonde post-deploy).
+- **`docs/DEPLOIEMENT.md`** — procédure Vercel + Upstash + variables + checklist
+  post-déploiement + rollback, en français.
+- **`tests/e2e/pages.spec.ts`** (URL directes, navigation depuis les réglages,
+  a11y). **271 tests** unitaires (+ router, PrivacyPage, HelpPage) + e2e.
+  Bundle inchangé (~113 ko gzip).
+
+### Phase 8 — A11y & perf _(mergée)_
 
 - **Focus visible** : `:focus-visible` global (anneau 2 px, token `--app-focus`
   par schéma) dans `theme.css`.
