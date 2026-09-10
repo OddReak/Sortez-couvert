@@ -30,7 +30,7 @@ export default function GlobeCanvas({
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ position: [0, 0, 8.4], fov: 21 }}
+      camera={{ position: [0, 0, 8.4], fov: 16 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'default' }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener(

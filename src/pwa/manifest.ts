@@ -9,7 +9,7 @@ import type { ManifestOptions } from 'vite-plugin-pwa';
  */
 export const pwaManifest: Partial<ManifestOptions> = {
   id: '/',
-  name: 'Terra — la météo qui se voit',
+  name: 'Terra weather',
   short_name: 'Terra',
   description:
     'Tournez le temps, voyez votre monde changer. La météo sur un globe.',
