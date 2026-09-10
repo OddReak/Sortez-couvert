@@ -70,7 +70,7 @@
 
 /* Température principale : clamp fluide (§5.3). Hors @theme (valeur fonction). */
 :root {
-  --text-temp-hero: clamp(4rem, 18vw, 5.5rem);
+  --text-temp-hero: clamp(3.25rem, 14vw, 4.25rem);
 
   /* Variables pilotées à l'exécution par useApplyTheme (fallback = jour). */
   --app-ambient: var(--color-bg-day);
@@ -126,6 +126,7 @@
   body {
     margin: 0;
     height: 100dvh; /* jamais 100vh sur iOS (brief §6 / §20) */
+    height: var(--app-vh, 100dvh); /* hauteur réelle (syncViewportHeight) */
     overflow: hidden;
     background: var(--app-ambient);
     color: var(--app-ink);
@@ -201,6 +202,11 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@utility app-h {
+  height: 100dvh; /* repli avant le 1er calcul / hors navigateur */
+  height: var(--app-vh, 100dvh);
 }
 
 @utility safe-t {

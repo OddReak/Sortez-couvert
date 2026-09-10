@@ -17,7 +17,7 @@ export function LocationGate({ children }: { children: ReactNode }) {
   const onboardingDone = usePlaces((s) => s.onboardingDone);
 
   if (!hydrated) {
-    return <div className="h-dvh bg-[var(--app-ambient)]" />;
+    return <div className="app-h bg-[var(--app-ambient)]" />;
   }
   if (current) return <>{children}</>;
   return onboardingDone ? <ChooseLocation /> : <Onboarding />;

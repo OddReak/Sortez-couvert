@@ -8,6 +8,15 @@ import { fetchPlaceByCoords } from './api';
 import { getCurrentPosition, type GeoResult } from './geolocation';
 import { usePlaces } from './placesStore';
 
+/** Fuseau IANA de l'appareil (repli quand `/api/place` est indisponible). */
+function deviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+}
+
 /**
  * Demande la position, remonte le `Place`, le fixe comme lieu courant et
  * l'ajoute aux favoris (brief §9.2). Gère les 3 états explicitement.
@@ -38,7 +47,10 @@ export function useAcquireLocation(): () => Promise<GeoResult> {
         adminArea: null,
         lat: res.lat,
         lon: res.lon,
-        timezone: 'UTC',
+        // Repli si `/api/place` échoue : le fuseau de l'appareil (on est
+        // physiquement sur place) plutôt qu'UTC — sinon décalage horaire.
+        // Affiné ensuite par la réponse météo (`updateCurrentMeta`).
+        timezone: deviceTimezone(),
       };
     }
 

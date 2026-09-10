@@ -314,7 +314,7 @@ export function TimeRing({
   return (
     <svg
       ref={svgRef}
-      viewBox="-150 -150 300 300"
+      viewBox="-138 -138 276 276"
       className="pointer-events-none absolute inset-0 h-full w-full touch-none"
     >
       <defs>
@@ -405,7 +405,7 @@ export function TimeRing({
         onKeyDown={onKeyDown}
       />
 
-      <foreignObject x="-150" y="-150" width="1" height="1">
+      <foreignObject x="-138" y="-138" width="1" height="1">
         <span aria-live="polite" className="sr-only">
           {announce}
         </span>

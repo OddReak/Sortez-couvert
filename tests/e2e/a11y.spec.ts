@@ -65,7 +65,6 @@ test('prévisions 7 jours', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();
   await page.getByRole('button', { name: 'Ouvrir le menu des lieux' }).click();
-  await page.getByRole('button', { name: 'Réglages' }).click();
   await page.getByRole('button', { name: 'Prévisions 7 jours' }).click();
   await expect(page.getByRole('dialog', { name: '7 jours' })).toBeVisible();
   await expectNoA11yViolations(page);

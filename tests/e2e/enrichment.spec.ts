@@ -66,12 +66,13 @@ test('carrousel 7 jours entre le globe et les métriques, tap → adapte le glob
   await expect(page.getByRole('dialog', { name: '7 jours' })).toHaveCount(0);
 });
 
-test('prévisions 7 jours accessibles depuis les réglages', async ({ page }) => {
+test('prévisions 7 jours accessibles depuis le menu des lieux', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();
 
   await page.getByRole('button', { name: 'Ouvrir le menu des lieux' }).click();
-  await page.getByRole('button', { name: 'Réglages' }).click();
   await page.getByRole('button', { name: 'Prévisions 7 jours' }).click();
 
   const sheet = page.getByRole('dialog', { name: '7 jours' });
