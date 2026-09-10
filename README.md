@@ -45,19 +45,19 @@ En développement, toutes les données météo passent par des mocks **MSW**
 
 ### Scripts
 
-| Commande                   | Rôle                                                        |
-| -------------------------- | ----------------------------------------------------------- |
-| `pnpm dev`                 | Serveur de dev Vite                                         |
-| `pnpm build`               | Typecheck + build de production (`dist/`)                   |
-| `pnpm preview`             | Sert le build (`http://localhost:4173`)                     |
-| `pnpm typecheck`           | `tsc --noEmit` (app + node)                                 |
-| `pnpm lint`                | ESLint (flat config)                                        |
-| `pnpm format`              | Prettier (écriture)                                         |
-| `pnpm test`                | Vitest (unitaires)                                          |
-| `pnpm test:coverage`       | Vitest + couverture (seuil `src/shared/lib` ≥ 85 %)         |
-| `pnpm test:e2e`            | Playwright (iPhone 15 ; le hors ligne sur Chromium)         |
-| `pnpm preview:real`        | Sert le build réel avec le service worker PWA (`:4174`)     |
-| `pnpm generate:pwa-assets` | Régénère icônes + splash iOS depuis `public/pwa-source.svg` |
+| Commande                   | Rôle                                                     |
+| -------------------------- | -------------------------------------------------------- |
+| `pnpm dev`                 | Serveur de dev Vite                                      |
+| `pnpm build`               | Typecheck + build de production (`dist/`)                |
+| `pnpm preview`             | Sert le build (`http://localhost:4173`)                  |
+| `pnpm typecheck`           | `tsc --noEmit` (app + node)                              |
+| `pnpm lint`                | ESLint (flat config)                                     |
+| `pnpm format`              | Prettier (écriture)                                      |
+| `pnpm test`                | Vitest (unitaires)                                       |
+| `pnpm test:coverage`       | Vitest + couverture (seuil `src/shared/lib` ≥ 85 %)      |
+| `pnpm test:e2e`            | Playwright (iPhone 15 ; le hors ligne sur Chromium)      |
+| `pnpm preview:real`        | Sert le build réel avec le service worker PWA (`:4174`)  |
+| `pnpm generate:pwa-assets` | Régénère icônes + splash iOS depuis `public/favicon.svg` |
 
 ---
 

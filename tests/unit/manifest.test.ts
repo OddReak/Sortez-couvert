@@ -19,9 +19,11 @@ describe('pwaManifest', () => {
     expect(pwaManifest.lang).toBe('fr');
   });
 
-  it('short_name tient en 12 caractères (§10.1)', () => {
-    expect(pwaManifest.short_name).toBeTruthy();
-    expect(pwaManifest.short_name!.length).toBeLessThanOrEqual(12);
+  it('nom de marque « Terra weather » (icône installée)', () => {
+    // Écart assumé vs brief §10.1 (« ≤ 12 car. ») : Audric veut le nom complet
+    // sous l'icône. Reste sous la limite pratique des lanceurs (~30 car.).
+    expect(pwaManifest.short_name).toBe('Terra weather');
+    expect(pwaManifest.name).toBe('Terra weather');
   });
 
   it('déclare les raccourcis « Ma position » et « Favoris »', () => {
