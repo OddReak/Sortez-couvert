@@ -314,12 +314,12 @@ export function TimeRing({
   return (
     <svg
       ref={svgRef}
-      viewBox="-138 -138 276 276"
+      viewBox="-132 -132 264 264"
       className="pointer-events-none absolute inset-0 h-full w-full touch-none"
     >
       <defs>
         <clipPath id="terra-ring-clip">
-          <circle cx="0" cy="0" r={RING_R + 22} />
+          <circle cx="0" cy="0" r={RING_R + 11} />
         </clipPath>
       </defs>
 
@@ -329,16 +329,16 @@ export function TimeRing({
         r={RING_R}
         fill="none"
         stroke="var(--app-hairline)"
-        strokeWidth="1.5"
+        strokeWidth="1"
       />
       <path
-        d={`M -7 ${-RING_R - 11} L 7 ${-RING_R - 11} L 0 ${-RING_R - 2} Z`}
+        d={`M -5.5 ${-RING_R - 9} L 5.5 ${-RING_R - 9} L 0 ${-RING_R - 1.5} Z`}
         fill="var(--app-live)"
       />
 
       <g ref={rotorRef} clipPath="url(#terra-ring-clip)">
         {grads.map((g) => {
-          const inner = RING_R - (g.major ? 12 : 6);
+          const inner = RING_R - (g.major ? 8 : 4);
           const sin = Math.sin(g.angle);
           const cos = Math.cos(g.angle);
           return (
@@ -350,7 +350,7 @@ export function TimeRing({
               x2={sin * inner}
               y2={-cos * inner}
               stroke="var(--app-ink-faint)"
-              strokeWidth={g.major ? 2 : 1}
+              strokeWidth={g.major ? 1.4 : 0.7}
               strokeLinecap="round"
             />
           );
@@ -364,18 +364,18 @@ export function TimeRing({
           return (
             <>
               <line
-                x1={sin * (RING_R + 6)}
-                y1={-cos * (RING_R + 6)}
-                x2={sin * (RING_R - 14)}
-                y2={-cos * (RING_R - 14)}
+                x1={sin * (RING_R + 3)}
+                y1={-cos * (RING_R + 3)}
+                x2={sin * (RING_R - 11)}
+                y2={-cos * (RING_R - 11)}
                 stroke="var(--app-live)"
-                strokeWidth="2.5"
+                strokeWidth="2"
                 strokeLinecap="round"
               />
               <circle
-                cx={sin * (RING_R + 10)}
-                cy={-cos * (RING_R + 10)}
-                r="3"
+                cx={sin * (RING_R + 7)}
+                cy={-cos * (RING_R + 7)}
+                r="2.5"
                 fill="var(--app-live)"
               />
             </>
@@ -405,7 +405,7 @@ export function TimeRing({
         onKeyDown={onKeyDown}
       />
 
-      <foreignObject x="-138" y="-138" width="1" height="1">
+      <foreignObject x="-132" y="-132" width="1" height="1">
         <span aria-live="polite" className="sr-only">
           {announce}
         </span>

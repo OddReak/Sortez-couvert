@@ -203,19 +203,38 @@ function TopBar({
   onOpenPicker,
 }: { place: Place; onOpenPicker: () => void } & BarActions) {
   return (
-    <header className="safe-t flex shrink-0 flex-col gap-1 px-4 pt-1">
-      <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
-      <h1 className="text-center text-2xl leading-tight font-bold text-balance">
+    <header className="safe-t flex shrink-0 flex-col gap-0.5 px-2 pt-1">
+      {/* Menu · lieu · recherche sur une seule ligne — le globe gagne la hauteur
+          de l'ancien titre isolé. */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={onOpenPicker}
-          aria-haspopup="dialog"
-          aria-label={`Lieu affiché : ${place.name}. Changer de lieu`}
-          className="rounded-lg px-2 py-0.5"
+          aria-label="Ouvrir le menu des lieux"
+          onClick={onOpenMenu}
+          className="grid size-11 shrink-0 place-items-center"
         >
-          {place.name}
+          <Menu size={22} aria-hidden="true" />
         </button>
-      </h1>
+        <h1 className="min-w-0 flex-1 text-center text-xl leading-tight font-bold">
+          <button
+            type="button"
+            onClick={onOpenPicker}
+            aria-haspopup="dialog"
+            aria-label={`Lieu affiché : ${place.name}. Changer de lieu`}
+            className="block max-w-full truncate rounded-lg px-2 py-1"
+          >
+            {place.name}
+          </button>
+        </h1>
+        <button
+          type="button"
+          aria-label="Rechercher une ville"
+          onClick={onOpenSearch}
+          className="grid size-11 shrink-0 place-items-center"
+        >
+          <Search size={22} aria-hidden="true" />
+        </button>
+      </div>
       <SubLine timezone={place.timezone} />
     </header>
   );
@@ -273,7 +292,7 @@ function CenterStage({
 
       {/* Élément principal de l'app : le globe prend toute la hauteur restante
           (carré), la bague affleure les bords (marge minimale). */}
-      <div className="grid min-h-0 w-full flex-1 place-items-center px-1">
+      <div className="grid min-h-0 w-full flex-1 place-items-center">
         <div className="relative aspect-square h-full w-auto max-w-full">
           <Suspense fallback={<GlobeFallback />}>
             <Globe
