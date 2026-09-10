@@ -1,5 +1,4 @@
 import { Droplets } from 'lucide-react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
 
 import { confidenceMeta } from '@/shared/lib/forecast';
 import { formatShortDay, nowSeconds, startOfDayEpoch } from '@/shared/lib/time';
@@ -12,46 +11,40 @@ const SHOWN_DAYS = 7;
 
 /**
  * Bande horizontale des prévisions journalières, entre le globe et les
- * métriques (brief §9.7). Défilement tactile avec aimantation ; chaque jour
- * ouvre le détail 7 jours. Les gestes de défilement ne doivent PAS déclencher
- * le swipe entre favoris (`useSwipePlaces`, posé sur un parent) → on stoppe la
- * propagation des Pointer Events.
+ * métriques (brief §9.7). Taper un jour recale le globe et le thème sur ce jour
+ * (mêmes fonctions que le jour même : fond selon l'heure regardée, etc.).
  */
 export function ForecastCarousel({
   days,
   timezone,
-  onOpenDetail,
+  activeDayStart,
+  onSelectDay,
 }: {
   days: DayStep[];
   timezone: string;
-  onOpenDetail: () => void;
+  /** Début (epoch) du jour actuellement piloté par la bague. */
+  activeDayStart: number;
+  onSelectDay: (dateIso: string) => void;
 }) {
   const shown = days.slice(0, SHOWN_DAYS);
   if (shown.length === 0) return null;
 
   const now = nowSeconds();
-  const stop = (e: ReactPointerEvent): void => {
-    e.stopPropagation();
-  };
 
   return (
     <section
       aria-label={`Prévisions ${String(SHOWN_DAYS)} jours`}
       className="shrink-0"
     >
-      <ul
-        className="flex [scroll-snap-type:x_proximity] [scrollbar-width:none] gap-1 overflow-x-auto overscroll-x-contain px-4 pt-0.5 pb-1 [&::-webkit-scrollbar]:hidden"
-        onPointerDownCapture={stop}
-        onPointerUpCapture={stop}
-        onPointerCancelCapture={stop}
-      >
+      <ul className="flex [scroll-snap-type:x_proximity] [scrollbar-width:none] gap-1 overflow-x-auto overscroll-x-contain px-4 pt-0.5 pb-1 [&::-webkit-scrollbar]:hidden">
         {shown.map((day) => (
           <li key={day.date} className="snap-start">
             <DayCard
               day={day}
               timezone={timezone}
               now={now}
-              onOpen={onOpenDetail}
+              active={startOfDayEpoch(day.date, timezone) === activeDayStart}
+              onSelect={onSelectDay}
             />
           </li>
         ))}
@@ -64,12 +57,14 @@ function DayCard({
   day,
   timezone,
   now,
-  onOpen,
+  active,
+  onSelect,
 }: {
   day: DayStep;
   timezone: string;
   now: number;
-  onOpen: () => void;
+  active: boolean;
+  onSelect: (dateIso: string) => void;
 }) {
   const label = formatShortDay(
     startOfDayEpoch(day.date, timezone),
@@ -93,9 +88,14 @@ function DayCard({
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={() => {
+        onSelect(day.date);
+      }}
       aria-label={aria}
-      className="active:chip-active flex min-h-11 w-14 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5"
+      aria-pressed={active}
+      className={`flex min-h-11 w-14 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 ${
+        active ? 'chip-active' : 'active:chip-active'
+      }`}
     >
       <span className="ink-muted flex items-center gap-1 text-[0.6875rem] font-medium capitalize">
         {conf ? (

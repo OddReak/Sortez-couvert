@@ -130,17 +130,29 @@ function paint(
   highContrast = false,
 ): ThemePaint {
   const dayness = clamp01(daynessRaw);
-  const scheme: ColorScheme = dayness < 0.5 ? 'dark' : 'light';
 
-  // Fond ambiant : dégradé pendant aube/crépuscule, uni sinon.
+  // L'aube et le crépuscule restent en schéma SOMBRE sur toute la transition :
+  // le fond ambiant est maintenu assez foncé pour qu'un texte clair tienne
+  // ≥ 4.5:1 du haut au bas du dégradé. (Le mockup laissait un texte sombre
+  // flotter sur un dégradé de teinte moyenne → illisible, brief §11.) Le
+  // basculement vers le plein jour est franc, à la sortie de la fenêtre de
+  // transition (dayness → 1, mode « day »).
+  const scheme: ColorScheme = mode === 'day' ? 'light' : 'dark';
+
+  // Fond ambiant : dégradé pendant aube/crépuscule, uni sinon. Les bornes du
+  // dégradé sont bridées côté nuit pour garder une luminance basse.
   let ambient: string;
   let themeColor: string;
   if (mode === 'dawn') {
-    ambient = `linear-gradient(180deg, ${mixHex(BG_NIGHT, DAWN_TO, dayness)} 0%, ${mixHex(DAWN_TO, DAWN_FROM, dayness)} 100%)`;
-    themeColor = mixHex(BG_NIGHT, DAWN_FROM, dayness);
+    const top = mixHex(BG_NIGHT, DAWN_TO, 0.14 + 0.22 * dayness);
+    const bottom = mixHex(BG_NIGHT, DAWN_FROM, 0.12 + 0.26 * dayness);
+    ambient = `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
+    themeColor = top;
   } else if (mode === 'dusk') {
-    ambient = `linear-gradient(180deg, ${mixHex(BG_NIGHT, DUSK_TO, dayness)} 0%, ${mixHex(DUSK_TO, DUSK_FROM, dayness)} 100%)`;
-    themeColor = mixHex(BG_NIGHT, DUSK_FROM, dayness);
+    const top = mixHex(BG_NIGHT, DUSK_TO, 0.14 + 0.22 * dayness);
+    const bottom = mixHex(BG_NIGHT, DUSK_FROM, 0.1 + 0.24 * dayness);
+    ambient = `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
+    themeColor = top;
   } else if (mode === 'day') {
     ambient = BG_DAY;
     themeColor = BG_DAY;

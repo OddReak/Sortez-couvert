@@ -203,6 +203,36 @@ Foreca (2 000 req/j) ; clés VAPID (si v2 push).
 
 ## 9. Journal des phases
 
+### Retouches UX post-Phase 9 _(branche `feat/ux-day-globe-ring`, 2026-09-10)_
+
+Sur demande d'Audric, 5 ajustements (gate verte : typecheck / lint / format /
+280 tests unitaires / build ; e2e ciblés verts) :
+
+1. **Contraste texte aube/crépuscule** (`shared/lib/theme.ts`) : le dégradé
+   ambiant restait de teinte moyenne → texte illisible (cf. `docs/image.png`).
+   Désormais l'aube et le crépuscule sont **toujours en schéma sombre** (texte
+   clair) et le dégradé est bridé côté nuit sur toute la transition ; bascule
+   franche vers le plein jour à la sortie de la fenêtre ±45 min.
+2. **Sens de la bague** (`time-ring/geometry.ts` + `TimeRing.tsx`) : le rotor
+   suit le doigt — rotation **horaire = on avance**, anti-horaire = on recule.
+   Le futur est désormais dessiné en anti-horaire ; `secondsToAngle` inchangé,
+   c'est le signe de la rotation du rotor et des graduations qui a été inversé.
+3. **Bague bornée à 24 h** : plus de plage −24 h → +72 h. La bague est un cadran
+   00:00 → 23:59 du **jour affiché** (fuseau ville). `clampEpoch(epoch,
+dayStart, dayEnd)`, `graduations(cursor, dayStart, dayEnd, …)`. Le jour actif
+   vit dans `time-ring/cursor.ts` (`configureToday` / `selectDay` /
+   `getDayWindow` / `getActiveDayStart`, hook `useActiveDayStart`).
+4. **Jour du carrousel → globe** : taper un jour sous le globe recale la bague
+   sur ce jour (mêmes fonctions : fond selon l'heure regardée, position du
+   soleil, thème). **Plus de popup « Prévisions 7 jours »** depuis le carrousel
+   ni le menu — le détail 7 jours reste accessible depuis **Réglages**
+   (`SettingsSheet`). `selectConditions` choisit les éphémérides du jour affiché
+   et approxime la température des jours hors couverture horaire (J+4 → J+7)
+   via une courbe diurne min/max.
+5. **Plus de swipe entre lieux** (`useSwipePlaces` supprimé). Taper le nom de la
+   ville en haut ouvre `PlacePickerSheet` (lieu courant + favoris + lien
+   recherche). Pas d'indicateur visuel (feature connue).
+
 ### État au 2026-09-09 (fin de session)
 
 - **`main` : Phases 0 → 8 mergées.** Dependabot #4–#8, #10 mergées ; #9 (TS 6)

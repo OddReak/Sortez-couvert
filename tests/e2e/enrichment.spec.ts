@@ -37,7 +37,7 @@ test('la sheet Qualité de l’air montre les sous-indices EPA', async ({
   await expect(sheet.getByText(/Polluant dominant/)).toBeVisible();
 });
 
-test('carrousel 7 jours entre le globe et les métriques, tap → détail', async ({
+test('carrousel 7 jours entre le globe et les métriques, tap → adapte le globe', async ({
   page,
 }) => {
   await page.goto('/');
@@ -56,15 +56,22 @@ test('carrousel 7 jours entre le globe et les métriques, tap → détail', asyn
   expect(rail!.y).toBeGreaterThan(now!.y);
   expect(rail!.y).toBeLessThan(wind!.y);
 
-  await carousel.getByRole('button').first().click();
-  await expect(page.getByRole('dialog', { name: '7 jours' })).toBeVisible();
+  // Taper un autre jour recale le globe/thème sur ce jour (pas de popup).
+  await carousel.getByRole('button').nth(2).click();
+  await expect(carousel.getByRole('button').nth(2)).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByText(/^Prévision ·/)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: '7 jours' })).toHaveCount(0);
 });
 
-test('prévisions 7 jours accessibles depuis le menu', async ({ page }) => {
+test('prévisions 7 jours accessibles depuis les réglages', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('heading', { name: 'Paris' }).waitFor();
 
   await page.getByRole('button', { name: 'Ouvrir le menu des lieux' }).click();
+  await page.getByRole('button', { name: 'Réglages' }).click();
   await page.getByRole('button', { name: 'Prévisions 7 jours' }).click();
 
   const sheet = page.getByRole('dialog', { name: '7 jours' });
