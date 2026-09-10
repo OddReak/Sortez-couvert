@@ -64,6 +64,26 @@ describe('favoris', () => {
     expect(usePlaces.getState().current?.name).toBe('Paris');
     expect(usePlaces.getState().favorites[0]?.name).toBe('Paris');
   });
+
+  it('updateCurrentMeta adopte le lieu résolu même si Foreca a recalé l’id', () => {
+    const gps = {
+      ...place('48.8566,2.3522', 'Ma position'),
+      timezone: 'UTC', // repli quand /api/place échoue
+    };
+    usePlaces.getState().setCurrent(gps);
+    usePlaces.getState().addFavorite(gps);
+
+    // Réponse météo : coordonnées recalées → id différent + vrai fuseau.
+    const resolved = {
+      ...place('48.85,2.35', 'Paris'),
+      timezone: 'Europe/Paris',
+    };
+    usePlaces.getState().updateCurrentMeta(resolved, gps.id);
+
+    expect(usePlaces.getState().current?.id).toBe('48.85,2.35');
+    expect(usePlaces.getState().current?.timezone).toBe('Europe/Paris');
+    expect(usePlaces.getState().favorites[0]?.name).toBe('Paris');
+  });
 });
 
 describe('historique de recherche', () => {

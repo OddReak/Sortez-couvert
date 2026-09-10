@@ -39,7 +39,7 @@ export type PlacesState = {
   hydrated: boolean;
 
   setCurrent: (place: Place) => void;
-  updateCurrentMeta: (place: Place) => void;
+  updateCurrentMeta: (place: Place, prevId?: string) => void;
   addFavorite: (place: Place) => boolean;
   removeFavorite: (id: string) => void;
   toggleFavorite: (place: Place) => void;
@@ -66,11 +66,19 @@ export const usePlaces = create<PlacesState>()(
         setState({ current: place });
       },
 
-      updateCurrentMeta: (place) => {
-        setState((s) => ({
-          current: s.current?.id === place.id ? place : s.current,
-          favorites: s.favorites.map((f) => (f.id === place.id ? place : f)),
-        }));
+      updateCurrentMeta: (place, prevId = place.id) => {
+        // `prevId` couvre le cas où Foreca recale les coordonnées entre la
+        // requête et la réponse (géoloc GPS → ville la plus proche) : l'`id`
+        // du lieu résolu diffère alors de celui qu'on avait posé. Sans ça, le
+        // fuseau horaire de repli (UTC) resterait figé — décalage à l'écran.
+        setState((s) => {
+          const match = (id: string | undefined): boolean =>
+            id === prevId || id === place.id;
+          return {
+            current: match(s.current?.id) ? place : s.current,
+            favorites: s.favorites.map((f) => (match(f.id) ? place : f)),
+          };
+        });
       },
 
       addFavorite: (place) => {

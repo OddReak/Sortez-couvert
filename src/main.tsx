@@ -7,6 +7,7 @@ import { App } from './app/App';
 import { startMockServiceWorker } from './mocks/start';
 import { registerServiceWorker } from './pwa/register';
 import { lockPinchZoom } from './shared/lib/viewportLock';
+import { syncViewportHeight } from './shared/lib/viewportHeight';
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {
@@ -14,6 +15,7 @@ if (!rootEl) {
 }
 
 lockPinchZoom();
+syncViewportHeight();
 
 const root = createRoot(rootEl);
 

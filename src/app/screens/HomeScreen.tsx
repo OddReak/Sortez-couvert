@@ -12,7 +12,11 @@ import { MetricSheet } from '@/features/metrics/MetricSheet';
 import type { MetricKey } from '@/features/metrics/metricMeta';
 import { useSettings } from '@/features/settings/store';
 import { useApplyTheme } from '@/features/theme/useApplyTheme';
-import { configureToday, selectDay } from '@/features/time-ring/cursor';
+import {
+  configureToday,
+  followNow,
+  selectDay,
+} from '@/features/time-ring/cursor';
 import { useActiveDayStart } from '@/features/time-ring/useCursor';
 import { HourStrip } from '@/features/time-ring/HourStrip';
 import { TimeRing } from '@/features/time-ring/TimeRing';
@@ -47,7 +51,7 @@ export function HomeScreen() {
   if (!place) return null; // garanti par <LocationGate>
 
   return (
-    <div className="safe-x mx-auto flex h-dvh max-w-md flex-col overflow-hidden bg-[var(--app-ambient)]">
+    <div className="safe-x app-h mx-auto flex max-w-md flex-col overflow-hidden bg-[var(--app-ambient)]">
       <PlaceScreen
         key={place.id}
         place={place}
@@ -108,10 +112,12 @@ function PlaceScreen({
     configureToday(start, start + 24 * 3600 - 1);
   }, [tz, place.id]);
 
-  // Affine le nom / fuseau du lieu courant depuis la réponse météo.
+  // Affine le nom / fuseau du lieu courant depuis la réponse météo. `place.id`
+  // en 2ᵉ argument : si Foreca a recalé les coordonnées (géoloc → ville la plus
+  // proche), l'`id` résolu diffère et le fuseau de repli resterait sinon figé.
   useEffect(() => {
-    if (query.data) updateCurrentMeta(query.data.place);
-  }, [query.data, updateCurrentMeta]);
+    if (query.data) updateCurrentMeta(query.data.place, place.id);
+  }, [query.data, updateCurrentMeta, place.id]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
@@ -253,15 +259,22 @@ function CenterStage({
   const showChips = forceChips || reduced;
 
   return (
-    <main className="flex min-h-[11rem] flex-1 flex-col items-center justify-center gap-1.5 py-1.5">
-      <p className="ink-muted shrink-0 text-xs tracking-widest uppercase">
+    <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-0.5 py-0.5">
+      <button
+        type="button"
+        onClick={() => {
+          followNow();
+        }}
+        aria-label="Revenir à l’heure actuelle"
+        className="ink-muted -my-1 shrink-0 rounded px-5 py-2.5 text-xs tracking-widest uppercase"
+      >
         Maintenant
-      </p>
+      </button>
 
-      {/* Le globe se dimensionne sur la hauteur disponible (aspect carré),
-          plafonné à 20rem, borné en largeur sur les écrans étroits. */}
-      <div className="grid min-h-0 w-full flex-1 place-items-center">
-        <div className="relative aspect-square h-full max-h-80 max-w-[86%]">
+      {/* Élément principal de l'app : le globe prend toute la hauteur restante
+          (carré), la bague affleure les bords (marge minimale). */}
+      <div className="grid min-h-0 w-full flex-1 place-items-center px-1">
+        <div className="relative aspect-square h-full w-auto max-w-full">
           <Suspense fallback={<GlobeFallback />}>
             <Globe
               lat={place.lat}
@@ -304,10 +317,12 @@ function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
   const { atEpoch } = useLiveConditions();
 
   return (
-    <footer className="safe-b flex shrink-0 flex-col gap-2 px-4 pt-1 pb-2">
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+    <footer className="safe-b flex shrink-0 flex-col gap-1 px-4 pt-0.5 pb-1.5">
+      <div className="flex items-end justify-between gap-x-4">
         <HeroTemperature />
-        <Metrics snapshot={snapshot} onSelect={setMetric} />
+        <div className="min-w-0 flex-1">
+          <Metrics snapshot={snapshot} onSelect={setMetric} />
+        </div>
       </div>
       <Attribution data={snapshot.attribution} />
 
@@ -327,14 +342,14 @@ function BottomPanel({ snapshot }: { snapshot: WeatherSnapshot }) {
 function HeroTemperature() {
   const { step } = useLiveConditions();
   return (
-    <div className="flex flex-col">
+    <div className="flex shrink-0 flex-col">
       <span
         className="leading-none font-light tabular-nums"
         style={{ fontSize: 'var(--text-temp-hero)' }}
       >
         <SpringTemp value={step.temp} />
       </span>
-      <span className="ink-muted text-sm tabular-nums">
+      <span className="ink-muted text-xs tabular-nums">
         Ressenti <SpringTemp value={step.feelsLike} />
       </span>
     </div>

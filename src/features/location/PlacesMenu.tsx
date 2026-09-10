@@ -1,7 +1,15 @@
 import { useState } from 'react';
 
-import { ChevronDown, ChevronUp, MapPin, Star, Trash2 } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Star,
+  Trash2,
+} from 'lucide-react';
 
+import { DailyForecastSheet } from '@/features/forecast/DailyForecastSheet';
 import { SettingsSheet } from '@/features/settings/SettingsSheet';
 import { Sheet } from '@/shared/ui/Sheet';
 import type { Place } from '@/shared/types/domain';
@@ -22,6 +30,7 @@ export function PlacesMenu({
   const removeFavorite = usePlaces((s) => s.removeFavorite);
   const reorder = usePlaces((s) => s.reorderFavorites);
   const [settings, setSettings] = useState(false);
+  const [forecast, setForecast] = useState(false);
 
   const currentIsFav =
     current !== null && favorites.some((f) => f.id === current.id);
@@ -121,12 +130,25 @@ export function PlacesMenu({
           </ul>
         )}
 
+        {current ? (
+          <button
+            type="button"
+            onClick={() => {
+              setForecast(true);
+            }}
+            className="mt-4 flex w-full items-center gap-2 rounded-xl py-3 text-left text-sm font-semibold"
+          >
+            <CalendarDays size={16} aria-hidden />
+            Prévisions 7 jours
+          </button>
+        ) : null}
+
         <button
           type="button"
           onClick={() => {
             setSettings(true);
           }}
-          className="mt-4 w-full rounded-xl py-3 text-left text-sm font-semibold"
+          className="mt-1 w-full rounded-xl py-3 text-left text-sm font-semibold"
         >
           Réglages
         </button>
@@ -138,6 +160,16 @@ export function PlacesMenu({
           setSettings(false);
         }}
       />
+
+      {current ? (
+        <DailyForecastSheet
+          open={forecast}
+          onClose={() => {
+            setForecast(false);
+          }}
+          place={current}
+        />
+      ) : null}
     </>
   );
 }

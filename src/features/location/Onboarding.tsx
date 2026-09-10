@@ -31,7 +31,7 @@ export function Onboarding() {
   };
 
   return (
-    <div className="safe-x safe-t safe-b mx-auto flex h-dvh max-w-md flex-col justify-between px-6 py-10 text-center">
+    <div className="safe-x safe-t safe-b app-h mx-auto flex max-w-md flex-col justify-between px-6 py-10 text-center">
       {step === 0 ? (
         <>
           <div />

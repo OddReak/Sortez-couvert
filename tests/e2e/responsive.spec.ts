@@ -61,19 +61,16 @@ for (const vp of VIEWPORTS) {
 test.describe('paysage court', () => {
   test.use({ viewport: { width: 740, height: 360 } });
 
-  test('contenu scrollable, tout reste atteignable', async ({ page }) => {
+  test('tout reste atteignable (fit ou défilement)', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Paris' })).toBeVisible();
     await noHorizontalScroll(page);
 
-    // Le contenu déborde en hauteur → le conteneur défile.
+    // Le conteneur central défile si le contenu déborde (jamais coupé).
     const scrollable = page.locator('[class*="overflow-y-auto"]').first();
-    const overflows = await scrollable.evaluate(
-      (el) => el.scrollHeight > el.clientHeight + 1,
-    );
-    expect(overflows, 'le contenu doit pouvoir défiler').toBe(true);
+    await expect(scrollable).toHaveCSS('overflow-y', 'auto');
 
-    // Après défilement, la température et l'attribution sont atteignables.
+    // Température et attribution atteignables (défilement au besoin).
     await page.getByText('Foreca').scrollIntoViewIfNeeded();
     await expect(page.getByText('Foreca')).toBeVisible();
     await expect(page.getByText(/Ressenti/)).toBeVisible();

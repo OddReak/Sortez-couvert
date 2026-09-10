@@ -83,36 +83,42 @@ export function MetricGrid({
   const rows = buildRows(step, units, snapshot);
 
   return (
-    <ul className="flex min-w-[9.5rem] flex-col gap-0">
+    <ul className="grid grid-cols-2 gap-x-3 text-sm">
       {rows.map(({ key, Icon, label, value, hint }) => {
         const content = (
           <>
-            <Icon size={17} className="ink-faint shrink-0" aria-hidden />
-            <span className="ink-muted text-sm">{label}</span>
-            <span className="ml-auto text-right">
+            <span className="flex items-center gap-1.5">
+              <Icon size={14} className="ink-faint shrink-0" aria-hidden />
+              <span className="ink-muted truncate text-xs">{label}</span>
+            </span>
+            <span className="flex items-baseline gap-1">
               <span className="font-semibold tabular-nums">{value}</span>
               {hint ? (
-                <span className="ink-muted ml-1 text-xs">{hint}</span>
+                <span className="ink-muted truncate text-xs">{hint}</span>
               ) : null}
             </span>
           </>
         );
 
         return (
-          <li key={key}>
+          <li key={key} className="min-w-0">
             {onSelect ? (
               <button
                 type="button"
                 onClick={() => {
                   onSelect(key);
                 }}
-                aria-label={`Détail : ${label}, ${value}`}
-                className="-mx-2 flex min-h-11 w-[calc(100%+1rem)] items-center gap-2.5 rounded-lg px-2"
+                aria-label={`Détail : ${label}, ${value}${
+                  hint ? `, ${hint}` : ''
+                }`}
+                className="flex min-h-11 w-full flex-col justify-center gap-0.5 rounded-lg text-left"
               >
                 {content}
               </button>
             ) : (
-              <span className="flex items-center gap-2.5 py-1">{content}</span>
+              <span className="flex flex-col justify-center gap-0.5 py-1">
+                {content}
+              </span>
             )}
           </li>
         );

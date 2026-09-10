@@ -9,7 +9,9 @@ test('faire tourner la bague au geste change l’heure', async ({ page }) => {
   if (!box) throw new Error('bague introuvable');
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;
-  const r = box.width / 2 - 6;
+  // Rayon de saisie : bien à l'intérieur de la bande tactile de l'anneau
+  // (le viewBox rogne au-delà de ~0.92 du demi-cadre).
+  const r = box.width * 0.37;
 
   // Départ en haut de l'anneau, rotation horaire d'un quart de tour (~3 h).
   await page.mouse.move(cx, cy - r);
