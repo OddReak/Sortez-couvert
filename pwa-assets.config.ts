@@ -7,9 +7,9 @@ import {
 
 /**
  * Icônes PWA + écrans de lancement iOS, générés au build par `vite-plugin-pwa`
- * (`pwaAssets: { config: true }`) depuis `public/pwa-source.svg` — marque Terra
- * (globe + terminateur), dessinée à partir des tokens de
- * `src/shared/styles/theme.css`. Fichiers non commités.
+ * (`pwaAssets: { config: true }`) depuis `public/favicon.svg` — source UNIQUE :
+ * la même image sert de favicon, d'icône installée (192/512/maskable),
+ * d'apple-touch-icon et de base des splash iOS. Fichiers générés non commités.
  *
  * Régénération manuelle : `pnpm generate:pwa-assets`.
  */
@@ -33,5 +33,5 @@ export default defineConfig({
       iphoneDevices,
     ),
   },
-  images: ['public/pwa-source.svg'],
+  images: ['public/favicon.svg'],
 });

@@ -205,23 +205,24 @@ function TopBar({
   return (
     <header className="safe-t flex shrink-0 flex-col gap-0.5 px-2 pt-1">
       {/* Menu · lieu · recherche sur une seule ligne — le globe gagne la hauteur
-          de l'ancien titre isolé. */}
-      <div className="flex items-center gap-1">
+          de l'ancien titre isolé. Colonnes latérales de largeur égale : le nom
+          du lieu est centré sur l'écran. */}
+      <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-1">
         <button
           type="button"
           aria-label="Ouvrir le menu des lieux"
           onClick={onOpenMenu}
-          className="grid size-11 shrink-0 place-items-center"
+          className="grid size-11 place-items-center"
         >
           <Menu size={22} aria-hidden="true" />
         </button>
-        <h1 className="min-w-0 flex-1 text-center text-xl leading-tight font-bold">
+        <h1 className="min-w-0 text-center text-xl leading-tight font-bold">
           <button
             type="button"
             onClick={onOpenPicker}
             aria-haspopup="dialog"
             aria-label={`Lieu affiché : ${place.name}. Changer de lieu`}
-            className="block max-w-full truncate rounded-lg px-2 py-1"
+            className="inline-block max-w-full truncate rounded-lg px-2 py-1"
           >
             {place.name}
           </button>
@@ -230,7 +231,7 @@ function TopBar({
           type="button"
           aria-label="Rechercher une ville"
           onClick={onOpenSearch}
-          className="grid size-11 shrink-0 place-items-center"
+          className="grid size-11 place-items-center justify-self-end"
         >
           <Search size={22} aria-hidden="true" />
         </button>

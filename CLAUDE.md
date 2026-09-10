@@ -67,7 +67,7 @@ api/            Vercel Functions — proxy Foreca (la clé reste serveur)
   health.ts     GET /api/health (sonde, sans secret)
   _lib/         (Phase 1) client HTTP, cache, ratelimit, schemas zod
 docs/           Brief maître + brief design + mockup + DEPLOIEMENT.md
-public/         textures/ + favicon.svg + pwa-source.svg (source icônes/splash)
+public/         textures/ + favicon.svg (favicon + source icônes/splash PWA)
                 icônes PWA + splash iOS : générés au build (non commités)
 scripts/        fetch-textures, probe-foreca, check-bundle-budget
 src/
@@ -494,7 +494,7 @@ motion` ou via les réglages (brief §8.6).
   `rebaseSnapshot` inchangé. `clearAll` (réglages) purge aussi les snapshots.
 - **Assets** : `pwa-assets.config.ts` + `@vite-pwa/assets-generator` — icônes
   192/512/maskable + 48 `apple-touch-startup-image` (12 iPhones × 2 orient. × 2
-  thèmes), **générés au build**, source `public/pwa-source.svg`. `sharp: true`
+  thèmes), **générés au build**, source `public/favicon.svg`. `sharp: true`
   dans `pnpm-workspace.yaml`.
 - **`tsconfig.worker.json`** (lib WebWorker, `exactOptionalPropertyTypes: false`
   — les plugins Workbox), ajouté à `pnpm typecheck` + `eslint` (globals

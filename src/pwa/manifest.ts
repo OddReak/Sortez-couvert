@@ -10,7 +10,9 @@ import type { ManifestOptions } from 'vite-plugin-pwa';
 export const pwaManifest: Partial<ManifestOptions> = {
   id: '/',
   name: 'Terra weather',
-  short_name: 'Terra',
+  // Nom sous l'icône une fois installée (Android/Chrome) — iOS prend
+  // `apple-mobile-web-app-title` dans index.html, aligné dessus.
+  short_name: 'Terra weather',
   description:
     'Tournez le temps, voyez votre monde changer. La météo sur un globe.',
   start_url: '/?source=pwa',
