@@ -70,6 +70,22 @@ export function startOfDayEpoch(dateIso: string, timezone: string): number {
   );
 }
 
+/** Date locale « YYYY-MM-DD » (fuseau ville) d'un instant. */
+export function localDateIso(epochSeconds: number, timezone: string): string {
+  return DateTime.fromSeconds(epochSeconds, { zone: timezone }).toFormat(
+    'yyyy-LL-dd',
+  );
+}
+
+/** Heure décimale locale ∈ [0, 24) d'un instant (courbe diurne de repli). */
+export function localHourFraction(
+  epochSeconds: number,
+  timezone: string,
+): number {
+  const d = DateTime.fromSeconds(epochSeconds, { zone: timezone });
+  return d.hour + d.minute / 60;
+}
+
 /** Vrai si les deux instants tombent dans la même heure locale. */
 export function isSameLocalHour(
   aSeconds: number,

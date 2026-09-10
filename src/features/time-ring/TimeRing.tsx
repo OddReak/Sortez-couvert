@@ -10,14 +10,13 @@ import { AngleAccumulator, pointerAngle } from './angle';
 import {
   followNow,
   getCursorEpoch,
+  getDayWindow,
   isFollowingNow,
   setCursorEpoch,
   setScrubbing,
   subscribeFast,
 } from './cursor';
 import {
-  RANGE_FUTURE_SECONDS,
-  RANGE_PAST_SECONDS,
   angleToSeconds,
   clampEpoch,
   graduations,
@@ -25,7 +24,7 @@ import {
 } from './geometry';
 import { pulseGraduation } from './haptic-pulse';
 import { approach, decayVelocity, snapTarget } from './physics';
-import { useCursorEpoch } from './useCursor';
+import { useActiveDayStart, useCursorEpoch } from './useCursor';
 
 const RING_R = 120;
 const HIT_WIDTH = 60; // > 44 pt (brief §8.1)
@@ -64,12 +63,16 @@ export function TimeRing({
   const announceTimer = useRef<number | null>(null);
 
   const ariaEpoch = useCursorEpoch();
+  const dayStart = useActiveDayStart();
 
   const grads = useMemo(
-    () => graduations(windowCenter.current, nowEpoch, 7),
-    // regénéré via windowVersion (rare)
+    () => {
+      const day = getDayWindow();
+      return graduations(windowCenter.current, day.start, day.end, 7);
+    },
+    // regénéré via windowVersion (rare) ou au changement de jour affiché
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [windowVersion, nowEpoch],
+    [windowVersion, nowEpoch, dayStart],
   );
 
   const scheduleAnnounce = useCallback(() => {
@@ -100,7 +103,9 @@ export function TimeRing({
       setWindowVersion((v) => v + 1);
     }
 
-    const deg = -secondsToAngle(epoch - windowCenter.current) * RAD_TO_DEG;
+    // La bague suit le doigt : quand le temps avance, le rotor tourne dans le
+    // sens horaire (rotate positif en SVG).
+    const deg = secondsToAngle(epoch - windowCenter.current) * RAD_TO_DEG;
     rotorRef.current?.setAttribute('transform', `rotate(${deg.toFixed(3)})`);
 
     const hour = Math.round(epoch / 3600);
@@ -119,6 +124,12 @@ export function TimeRing({
   const stopLoop = useCallback(() => {
     if (rafId.current !== null) cancelAnimationFrame(rafId.current);
     rafId.current = null;
+  }, []);
+
+  // Borne à la journée affichée par la bague (00:00 → 23:59, fuseau ville).
+  const clampToDay = useCallback((epoch: number) => {
+    const day = getDayWindow();
+    return clampEpoch(epoch, day.start, day.end);
   }, []);
 
   const settle = useCallback(
@@ -149,7 +160,7 @@ export function TimeRing({
       if (d.velocity !== 0) {
         d.velocity = decayVelocity(d.velocity);
         const from = getCursorEpoch();
-        const next = clampEpoch(from + d.velocity, nowEpoch);
+        const next = clampToDay(from + d.velocity);
         if (next === from) d.velocity = 0;
         setCursorEpoch(next, true);
         keepGoing = d.velocity !== 0;
@@ -179,7 +190,7 @@ export function TimeRing({
     } else {
       stopLoop();
     }
-  }, [nowEpoch, settle, syncRotor, stopLoop]);
+  }, [nowEpoch, settle, syncRotor, stopLoop, clampToDay]);
 
   const startLoop = useCallback(() => {
     rafId.current ??= requestAnimationFrame(loop);
@@ -248,7 +259,7 @@ export function TimeRing({
     d.velocity = d.velocity * 0.7 + (deltaSec / dt) * 16.67 * 0.3;
 
     setCursorEpoch(
-      clampEpoch(d.startEpoch + angleToSeconds(acc.current.total), nowEpoch),
+      clampToDay(d.startEpoch + angleToSeconds(acc.current.total)),
       true,
     );
   };
@@ -275,17 +286,17 @@ export function TimeRing({
     switch (e.key) {
       case 'ArrowRight':
       case 'ArrowUp':
-        setCursorEpoch(clampEpoch(cur + step, nowEpoch), false);
+        setCursorEpoch(clampToDay(cur + step), false);
         break;
       case 'ArrowLeft':
       case 'ArrowDown':
-        setCursorEpoch(clampEpoch(cur - step, nowEpoch), false);
+        setCursorEpoch(clampToDay(cur - step), false);
         break;
       case 'PageUp':
-        setCursorEpoch(clampEpoch(cur + 24 * 3600, nowEpoch), false);
+        setCursorEpoch(clampToDay(cur + 24 * 3600), false);
         break;
       case 'PageDown':
-        setCursorEpoch(clampEpoch(cur - 24 * 3600, nowEpoch), false);
+        setCursorEpoch(clampToDay(cur - 24 * 3600), false);
         break;
       case 'Home':
         followNow();
@@ -347,7 +358,7 @@ export function TimeRing({
 
         {/* Repère « maintenant » — orbite avec le rotor (brief §8.1). */}
         {(() => {
-          const a = secondsToAngle(nowEpoch - windowCenter.current);
+          const a = secondsToAngle(windowCenter.current - nowEpoch);
           const sin = Math.sin(a);
           const cos = Math.cos(a);
           return (
@@ -383,8 +394,8 @@ export function TimeRing({
         role="slider"
         tabIndex={0}
         aria-label="Heure affichée — tournez la bague ou utilisez les flèches"
-        aria-valuemin={nowEpoch - RANGE_PAST_SECONDS}
-        aria-valuemax={nowEpoch + RANGE_FUTURE_SECONDS}
+        aria-valuemin={dayStart}
+        aria-valuemax={dayStart + 24 * 3600 - 1}
         aria-valuenow={Math.round(ariaEpoch)}
         aria-valuetext={announce || formatDayTime(ariaEpoch, tz)}
         onPointerDown={onPointerDown}

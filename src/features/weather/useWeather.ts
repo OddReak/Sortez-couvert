@@ -3,7 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useSettings } from '@/features/settings/store';
 import { interpolateValue, nearestStep } from '@/shared/lib/interpolate';
 import { resolveTheme, type ThemePaint } from '@/shared/lib/theme';
-import type { Place, TimeStep, WeatherSnapshot } from '@/shared/types/domain';
+import { localDateIso, localHourFraction } from '@/shared/lib/time';
+import type {
+  DayStep,
+  Place,
+  TimeStep,
+  WeatherSnapshot,
+} from '@/shared/types/domain';
 
 import { fetchWeather, type WeatherQueryInput } from './api';
 import { loadSnapshot, saveSnapshot } from './snapshotCache';
@@ -53,6 +59,48 @@ export type DisplayedConditions = {
   theme: ThemePaint;
 };
 
+/**
+ * Fraction diurne ∈ [0, 1] : 0 vers 04:00 (plus froid), 1 vers 16:00 (plus
+ * chaud). Sert à situer une température entre le min et le max du jour quand
+ * l'instant demandé sort de la couverture horaire (jours J+4 → J+7).
+ */
+function diurnalFraction(hourFrac: number): number {
+  return 0.5 - 0.5 * Math.cos((2 * Math.PI * (hourFrac - 4)) / 24);
+}
+
+/** Pas météo approché depuis la prévision journalière (hors plage horaire). */
+function stepFromDay(
+  day: DayStep,
+  atEpoch: number,
+  timezone: string,
+): TimeStep {
+  const frac = diurnalFraction(localHourFraction(atEpoch, timezone));
+  const temp =
+    day.minTemp !== null && day.maxTemp !== null
+      ? Math.round((day.minTemp + (day.maxTemp - day.minTemp) * frac) * 10) / 10
+      : null;
+  return {
+    time: new Date(atEpoch * 1000).toISOString(),
+    epoch: atEpoch,
+    symbol: day.symbol,
+    phrase: day.phrase,
+    temp,
+    feelsLike: temp,
+    humidity: null,
+    windSpeed: null,
+    windDir: null,
+    windDirLabel: null,
+    gust: null,
+    precipProb: day.precipProb,
+    precipAccum: day.precipAccum,
+    precipType: null,
+    cloudiness: null,
+    uvIndex: day.uvIndex,
+    pressure: null,
+    visibility: null,
+  };
+}
+
 /** Valeur numérique au moment sélectionné (linéaire entre les pas). */
 function pickNumeric(
   hourly: readonly TimeStep[],
@@ -90,8 +138,40 @@ export function selectConditions(
 
   const atEpoch = selectedEpoch;
   const isNow = Math.abs(atEpoch - now) < 30 * 60;
+  const tz = snapshot.place.timezone;
+
+  // Éphémérides du JOUR affiché (pas forcément aujourd'hui) → thème correct
+  // quand on regarde un autre jour depuis le carrousel.
+  const dayIso = localDateIso(atEpoch, tz);
+  const day =
+    snapshot.daily.find((d) => d.date === dayIso) ?? snapshot.daily[0];
+  const theme = resolveTheme({
+    atSeconds: atEpoch,
+    sunriseSeconds: day?.sunriseEpoch ?? null,
+    sunsetSeconds: day?.sunsetEpoch ?? null,
+    highContrast,
+  });
 
   const hourly = snapshot.hourly;
+  const first = hourly[0]?.epoch;
+  const last = hourly[hourly.length - 1]?.epoch;
+  const outOfHourlyRange =
+    first === undefined ||
+    last === undefined ||
+    atEpoch < first - 1800 ||
+    atEpoch > last + 1800;
+
+  // Jour hors couverture horaire (J+4 → J+7) : on approxime depuis le
+  // journalier plutôt que de figer la dernière heure connue.
+  if (outOfHourlyRange && day) {
+    return {
+      atEpoch,
+      isNow: false,
+      step: stepFromDay(day, atEpoch, tz),
+      theme,
+    };
+  }
+
   const anchor = nearestStep(hourly, atEpoch) ?? snapshot.current;
 
   const step: TimeStep = {
@@ -114,14 +194,6 @@ export function selectConditions(
     pressure: pickNumeric(hourly, atEpoch, 'pressure'),
     visibility: pickNumeric(hourly, atEpoch, 'visibility'),
   };
-
-  const today = snapshot.daily[0];
-  const theme = resolveTheme({
-    atSeconds: atEpoch,
-    sunriseSeconds: today?.sunriseEpoch ?? null,
-    sunsetSeconds: today?.sunsetEpoch ?? null,
-    highContrast,
-  });
 
   return { atEpoch, isNow, step, theme };
 }

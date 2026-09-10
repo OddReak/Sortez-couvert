@@ -2,18 +2,18 @@ import { Menu, Search } from 'lucide-react';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import { AlertBanner } from '@/features/alerts/AlertBanner';
-import { DailyForecastSheet } from '@/features/forecast/DailyForecastSheet';
 import { ForecastCarousel } from '@/features/forecast/ForecastCarousel';
+import { PlacePickerSheet } from '@/features/location/PlacePickerSheet';
 import { PlacesMenu } from '@/features/location/PlacesMenu';
 import { SearchSheet } from '@/features/location/SearchSheet';
 import { usePlaces } from '@/features/location/placesStore';
-import { useSwipePlaces } from '@/features/location/useSwipePlaces';
 import { MetricGrid } from '@/features/metrics/MetricGrid';
 import { MetricSheet } from '@/features/metrics/MetricSheet';
 import type { MetricKey } from '@/features/metrics/metricMeta';
 import { useSettings } from '@/features/settings/store';
 import { useApplyTheme } from '@/features/theme/useApplyTheme';
-import { followNow } from '@/features/time-ring/cursor';
+import { configureToday, selectDay } from '@/features/time-ring/cursor';
+import { useActiveDayStart } from '@/features/time-ring/useCursor';
 import { HourStrip } from '@/features/time-ring/HourStrip';
 import { TimeRing } from '@/features/time-ring/TimeRing';
 import { Attribution } from '@/features/weather/Attribution';
@@ -24,7 +24,13 @@ import {
 import { StaleDataBanner } from '@/features/weather/StaleDataBanner';
 import { useWeatherSnapshot } from '@/features/weather/useWeather';
 import { usePrefersReducedMotion } from '@/shared/lib/useMediaQuery';
-import { formatClock, formatDayTime } from '@/shared/lib/time';
+import {
+  formatClock,
+  formatDayTime,
+  localDateIso,
+  nowSeconds,
+  startOfDayEpoch,
+} from '@/shared/lib/time';
 import { roundHalfUp } from '@/shared/lib/units';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { WeatherIcon } from '@/shared/ui/WeatherIcon';
@@ -36,6 +42,7 @@ export function HomeScreen() {
   const place = usePlaces((s) => s.current);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
+  const [picker, setPicker] = useState(false);
 
   if (!place) return null; // garanti par <LocationGate>
 
@@ -50,11 +57,23 @@ export function HomeScreen() {
         onOpenSearch={() => {
           setSearch(true);
         }}
+        onOpenPicker={() => {
+          setPicker(true);
+        }}
       />
       <PlacesMenu
         open={menu}
         onClose={() => {
           setMenu(false);
+        }}
+      />
+      <PlacePickerSheet
+        open={picker}
+        onClose={() => {
+          setPicker(false);
+        }}
+        onSearch={() => {
+          setSearch(true);
         }}
       />
       <SearchSheet
@@ -71,20 +90,23 @@ function PlaceScreen({
   place,
   onOpenMenu,
   onOpenSearch,
+  onOpenPicker,
 }: {
   place: Place;
   onOpenMenu: () => void;
   onOpenSearch: () => void;
+  onOpenPicker: () => void;
 }) {
   const query = useWeatherSnapshot(place);
   const updateCurrentMeta = usePlaces((s) => s.updateCurrentMeta);
-  const swipe = useSwipePlaces();
-  const [forecastOpen, setForecastOpen] = useState(false);
+  const activeDayStart = useActiveDayStart();
+  const tz = place.timezone;
 
-  // Nouveau lieu → le curseur revient à « maintenant ».
+  // Nouveau lieu (ou fuseau) → la bague se cale sur « aujourd'hui », en direct.
   useEffect(() => {
-    followNow();
-  }, [place.id]);
+    const start = startOfDayEpoch(localDateIso(nowSeconds(), tz), tz);
+    configureToday(start, start + 24 * 3600 - 1);
+  }, [tz, place.id]);
 
   // Affine le nom / fuseau du lieu courant depuis la réponse météo.
   useEffect(() => {
@@ -92,10 +114,7 @@ function PlaceScreen({
   }, [query.data, updateCurrentMeta]);
 
   return (
-    <div
-      className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
-      {...swipe}
-    >
+    <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
       {query.data ? (
         <LiveConditionsProvider snapshot={query.data}>
           <ThemeSync />
@@ -103,6 +122,7 @@ function PlaceScreen({
             place={place}
             onOpenMenu={onOpenMenu}
             onOpenSearch={onOpenSearch}
+            onOpenPicker={onOpenPicker}
           />
           <AlertBanner
             warnings={query.data.warnings}
@@ -116,18 +136,13 @@ function PlaceScreen({
           <ForecastCarousel
             days={query.data.daily}
             timezone={place.timezone}
-            onOpenDetail={() => {
-              setForecastOpen(true);
+            activeDayStart={activeDayStart}
+            onSelectDay={(dateIso) => {
+              const start = startOfDayEpoch(dateIso, place.timezone);
+              selectDay(start, start + 24 * 3600 - 1);
             }}
           />
           <BottomPanel snapshot={query.data} />
-          <DailyForecastSheet
-            open={forecastOpen}
-            onClose={() => {
-              setForecastOpen(false);
-            }}
-            place={place}
-          />
         </LiveConditionsProvider>
       ) : (
         <LoadingLayout
@@ -179,12 +194,21 @@ function TopBar({
   place,
   onOpenMenu,
   onOpenSearch,
-}: { place: Place } & BarActions) {
+  onOpenPicker,
+}: { place: Place; onOpenPicker: () => void } & BarActions) {
   return (
     <header className="safe-t flex shrink-0 flex-col gap-1 px-4 pt-1">
       <TopButtons onOpenMenu={onOpenMenu} onOpenSearch={onOpenSearch} />
       <h1 className="text-center text-2xl leading-tight font-bold text-balance">
-        {place.name}
+        <button
+          type="button"
+          onClick={onOpenPicker}
+          aria-haspopup="dialog"
+          aria-label={`Lieu affiché : ${place.name}. Changer de lieu`}
+          className="rounded-lg px-2 py-0.5"
+        >
+          {place.name}
+        </button>
       </h1>
       <SubLine timezone={place.timezone} />
     </header>

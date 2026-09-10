@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { startOfDayEpoch } from '@/shared/lib/time';
 import type { DayStep } from '@/shared/types/domain';
 
 import { ForecastCarousel } from './ForecastCarousel';
@@ -33,18 +34,24 @@ const week = Array.from({ length: 10 }, (_, i) =>
 describe('ForecastCarousel', () => {
   it('n’affiche rien sans données', () => {
     const { container } = render(
-      <ForecastCarousel days={[]} timezone={TZ} onOpenDetail={vi.fn()} />,
+      <ForecastCarousel
+        days={[]}
+        timezone={TZ}
+        activeDayStart={0}
+        onSelectDay={vi.fn()}
+      />,
     );
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('montre 7 jours (sur 10 reçus) et ouvre le détail au tap', async () => {
-    const onOpenDetail = vi.fn();
+  it('montre 7 jours (sur 10 reçus) et sélectionne le jour au tap', async () => {
+    const onSelectDay = vi.fn();
     render(
       <ForecastCarousel
         days={week}
         timezone={TZ}
-        onOpenDetail={onOpenDetail}
+        activeDayStart={0}
+        onSelectDay={onSelectDay}
       />,
     );
 
@@ -52,7 +59,22 @@ describe('ForecastCarousel', () => {
     expect(buttons).toHaveLength(7);
 
     await userEvent.click(buttons[0]!);
-    expect(onOpenDetail).toHaveBeenCalledOnce();
+    expect(onSelectDay).toHaveBeenCalledWith('2026-09-08');
+  });
+
+  it('marque le jour actif (aria-pressed)', () => {
+    render(
+      <ForecastCarousel
+        days={week}
+        timezone={TZ}
+        activeDayStart={startOfDayEpoch('2026-09-10', TZ)}
+        onSelectDay={vi.fn()}
+      />,
+    );
+    const pressed = screen
+      .getAllByRole('button')
+      .filter((b) => b.getAttribute('aria-pressed') === 'true');
+    expect(pressed).toHaveLength(1);
   });
 
   it('affiche « — » pour une température absente, jamais NaN', () => {
@@ -60,7 +82,8 @@ describe('ForecastCarousel', () => {
       <ForecastCarousel
         days={[day({ maxTemp: null, minTemp: null, precipProb: null })]}
         timezone={TZ}
-        onOpenDetail={vi.fn()}
+        activeDayStart={0}
+        onSelectDay={vi.fn()}
       />,
     );
     // 3 tirets : max, min, pluie

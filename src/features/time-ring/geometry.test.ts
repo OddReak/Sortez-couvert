@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  RANGE_FUTURE_SECONDS,
-  RANGE_PAST_SECONDS,
   SECONDS_PER_TURN,
   angleToSeconds,
   clampEpoch,
@@ -12,6 +10,9 @@ import {
 } from './geometry';
 
 const NOW = 1_788_868_800;
+// Journée affichée : 00:00 → 23:59 autour de NOW.
+const DAY_START = Math.floor(NOW / 86_400) * 86_400;
+const DAY_END = DAY_START + 86_400 - 1;
 
 describe('angle ↔ temps', () => {
   it('un tour complet = 12 h', () => {
@@ -29,37 +30,53 @@ describe('angle ↔ temps', () => {
     expect(secondsToAngle(3600)).toBeCloseTo(Math.PI / 6, 6);
     expect(secondsToAngle(3 * 3600)).toBeCloseTo(Math.PI / 2, 6);
   });
+
+  it('le futur est en anti-horaire (angle négatif)', () => {
+    // graduation d'une heure future, vue depuis le centre du jour
+    const [future] = graduations(DAY_START, DAY_START, DAY_END, 2).filter(
+      (g) => g.epoch > DAY_START,
+    );
+    expect(future?.angle).toBeLessThan(0);
+  });
 });
 
 describe('clampEpoch', () => {
-  it('borne à −24 h / +72 h autour de maintenant', () => {
-    expect(clampEpoch(NOW - 40 * 3600, NOW)).toBe(NOW - RANGE_PAST_SECONDS);
-    expect(clampEpoch(NOW + 100 * 3600, NOW)).toBe(NOW + RANGE_FUTURE_SECONDS);
-    expect(clampEpoch(NOW + 3600, NOW)).toBe(NOW + 3600);
+  it('borne à la journée affichée [00:00, 23:59]', () => {
+    expect(clampEpoch(DAY_START - 5 * 3600, DAY_START, DAY_END)).toBe(
+      DAY_START,
+    );
+    expect(clampEpoch(DAY_END + 5 * 3600, DAY_START, DAY_END)).toBe(DAY_END);
+    expect(clampEpoch(DAY_START + 3600, DAY_START, DAY_END)).toBe(
+      DAY_START + 3600,
+    );
   });
 });
 
 describe('graduations', () => {
+  const MID = DAY_START + 12 * 3600;
+
   it('produit des graduations horaires autour du curseur', () => {
-    const g = graduations(NOW, NOW, 5);
+    const g = graduations(MID, DAY_START, DAY_END, 5);
     expect(g.length).toBe(11); // −5 h … +5 h
     expect(g.every((x) => x.epoch % 3600 === 0)).toBe(true);
   });
 
   it('marque les majeures toutes les 3 h', () => {
-    const g = graduations(NOW, NOW, 6);
+    const g = graduations(MID, DAY_START, DAY_END, 6);
     const majors = g.filter((x) => x.major);
     expect(majors.every((x) => (x.epoch / 3600) % 3 === 0)).toBe(true);
   });
 
-  it('ne dépasse pas la plage autorisée', () => {
-    const g = graduations(NOW + RANGE_FUTURE_SECONDS, NOW, 7);
-    expect(g.every((x) => x.epoch <= NOW + RANGE_FUTURE_SECONDS)).toBe(true);
+  it('ne dépasse jamais la journée affichée', () => {
+    const g = graduations(DAY_END, DAY_START, DAY_END, 7);
+    expect(g.every((x) => x.epoch >= DAY_START && x.epoch <= DAY_END)).toBe(
+      true,
+    );
   });
 
   it('la graduation du curseur est à l’angle 0 (en haut)', () => {
-    const g = graduations(NOW, NOW, 3);
-    const atCursor = g.find((x) => x.epoch === NOW);
+    const g = graduations(MID, DAY_START, DAY_END, 3);
+    const atCursor = g.find((x) => x.epoch === MID);
     expect(atCursor?.angle).toBeCloseTo(0, 6);
   });
 });
